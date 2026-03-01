@@ -1,11 +1,10 @@
 package netchan
+
 import (
+	"github.com/GameXG/ProxyClient"
 	"testing"
-	"github.com/gamexg/proxyclient"
 	"time"
 )
-
-
 
 func TextChanDialTimeout(t *testing.T) {
 	connChan := make(chan ConnRes)
@@ -18,7 +17,7 @@ func TextChanDialTimeout(t *testing.T) {
 	}
 
 	go func() {
-		ChanDialTimeout(dial, 0, connChan, exitChan, true, "user data 111", nil, "tcp", "www.baidu.com:80", 5 * time.Second)
+		ChanDialTimeout(dial, 0, connChan, exitChan, true, "user data 111", nil, "tcp", "www.baidu.com:80", 5*time.Second)
 		close(connChan)
 		close(exitChan)
 	}()
@@ -32,6 +31,5 @@ func TextChanDialTimeout(t *testing.T) {
 	if i == 0 {
 		t.Errorf("错误，未成功建立至少1个连接。")
 	}
-
 
 }

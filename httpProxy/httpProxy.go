@@ -22,7 +22,6 @@ proxylient 专用，只支持 CCONNECT 命令。
 放置到 nginx 前面，只处理 httpsDomain 域名的 CONNECT 请求。未知的域名会转发给 httpsForwardAddr 。
 */
 
-
 type Flusher interface {
 	Flush() error
 }
@@ -65,8 +64,7 @@ func (s *HttpSrever) HandlerHttp(conn net.Conn) {
 
 		host := r.RequestURI
 
-
-		remoteConn, err := net.DialTimeout("tcp", host, 5 * time.Second)
+		remoteConn, err := net.DialTimeout("tcp", host, 5*time.Second)
 		if err != nil {
 			fmt.Println("Bad Gateway", err)
 			s.Error(conn, http.StatusBadGateway, "Bad Gateway")

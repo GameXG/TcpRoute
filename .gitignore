@@ -26,3 +26,6 @@ _testmain.go
 config.toml
 httpProxy/tls.crt
 httpProxy/tls.key
+.cache/
+.DS_Store
+dist/

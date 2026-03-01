@@ -1,10 +1,11 @@
 package main
+
 import (
-	"sync"
-	"github.com/golang/groupcache/lru"
-	"time"
 	"fmt"
+	"github.com/golang/groupcache/lru"
 	"sort"
+	"sync"
+	"time"
 )
 
 // up Stream 缓存
@@ -15,7 +16,7 @@ const cacheTimeout = 15 * time.Minute
 // 保存连接耗时缓存
 // 每一个ip、代理一个
 type upStreamConnCacheAddrItem struct {
-							 // TODO: 对于连接被重置怎么处理？
+	// TODO: 对于连接被重置怎么处理？
 	IpAddr     string        // IP:端口 格式的地址
 	DomainAddr string        // 域名:端口 格式的地址
 	TcpPing    time.Duration // 建立连接耗时
@@ -25,8 +26,8 @@ type upStreamConnCacheAddrItem struct {
 
 type upStreamConnCacheAddrItems []*upStreamConnCacheAddrItem
 
-func (a upStreamConnCacheAddrItems) Len() int { return len(a) }
-func (a upStreamConnCacheAddrItems) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a upStreamConnCacheAddrItems) Len() int           { return len(a) }
+func (a upStreamConnCacheAddrItems) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a upStreamConnCacheAddrItems) Less(i, j int) bool { return a[i].TcpPing < a[j].TcpPing }
 
 // 每域名1个
@@ -42,10 +43,10 @@ type ErrCheck interface {
 
 // 连接缓存
 type upStreamConnCache struct {
-						//domains map[string]upStreamConnCacheDomainItem
+	//domains map[string]upStreamConnCacheDomainItem
 	domains  *lru.Cache // 域名 map ，类型是 *upStreamConnCacheDomainItem
 	errCheck ErrCheck
-	m      sync.Mutex
+	m        sync.Mutex
 }
 
 func NewUpStreamConnCache(errCheck ErrCheck) *upStreamConnCache {
@@ -56,7 +57,7 @@ func NewUpStreamConnCache(errCheck ErrCheck) *upStreamConnCache {
 }
 
 // 更新记录
-func (c*upStreamConnCache)Updata(domainAddr, ipAddr string, tcpping time.Duration, dialClient *DialClient, dialName string) {
+func (c *upStreamConnCache) Updata(domainAddr, ipAddr string, tcpping time.Duration, dialClient *DialClient, dialName string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
@@ -92,7 +93,7 @@ func (c*upStreamConnCache)Updata(domainAddr, ipAddr string, tcpping time.Duratio
 // 获得指定的项
 // 多线程不安全。
 // 不存在返回 nil
-func (c*upStreamConnCache)get(domainAddr string) *upStreamConnCacheDomainItem {
+func (c *upStreamConnCache) get(domainAddr string) *upStreamConnCacheDomainItem {
 	v, ok := c.domains.Get(domainAddr)
 
 	if ok == false {
@@ -111,7 +112,7 @@ func (c*upStreamConnCache)get(domainAddr string) *upStreamConnCacheDomainItem {
 
 // 设置指定项
 // 多线程不安全
-func (c*upStreamConnCache)set(domainAddr string, item  *upStreamConnCacheDomainItem) {
+func (c *upStreamConnCache) set(domainAddr string, item *upStreamConnCacheDomainItem) {
 	c.domains.Add(domainAddr, item)
 }
 
@@ -119,7 +120,7 @@ func (c*upStreamConnCache)set(domainAddr string, item  *upStreamConnCacheDomainI
 // 存在时 err == nil ，否则 err != nil
 // 返回值是值拷贝，不需要担心多线程复用问题
 // 会尝试检查是否是是异常地址
-func (c*upStreamConnCache)GetOptimal(domainAddr string) (upStreamConnCacheAddrItem, error) {
+func (c *upStreamConnCache) GetOptimal(domainAddr string) (upStreamConnCacheAddrItem, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 
@@ -142,7 +143,7 @@ func (c*upStreamConnCache)GetOptimal(domainAddr string) (upStreamConnCacheAddrIt
 
 // 删除某个域的缓存记录
 // 在每次进行全部连接重试时将会清空旧的缓存内容。
-func (c*upStreamConnCache)Del(domainAddr string) {
+func (c *upStreamConnCache) Del(domainAddr string) {
 	c.m.Lock()
 	defer c.m.Unlock()
 

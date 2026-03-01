@@ -1,8 +1,9 @@
 package main
+
 import (
-	"net"
-	"github.com/gamexg/preRead"
 	"fmt"
+	"github.com/gamexg/preRead"
+	"net"
 )
 
 // handler 切换器
@@ -12,16 +13,16 @@ type switchHandlerNewer struct {
 }
 
 func NewSwitchHandlerNewer() *switchHandlerNewer {
-	return &switchHandlerNewer{ make([]HandlerNewer, 0, 10)}
+	return &switchHandlerNewer{make([]HandlerNewer, 0, 10)}
 }
 
-func (sh *switchHandlerNewer)AppendHandlerNewer(h HandlerNewer) {
+func (sh *switchHandlerNewer) AppendHandlerNewer(h HandlerNewer) {
 	sh.handlerNewers = append(sh.handlerNewers, h)
 }
 
 // 尝试创建处理
 // 这里会循环尝试创建所有的处理器
-func (sh *switchHandlerNewer)New(conn net.Conn) (h Handler, rePre bool, err error) {
+func (sh *switchHandlerNewer) New(conn net.Conn) (h Handler, rePre bool, err error) {
 	pc := preread.NewPreConn(conn)
 	pc.NewPre()
 	defer pc.ClosePre()

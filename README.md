@@ -7,11 +7,13 @@
 
 通过 socks5 代理协议对外提供服务。
 
-通过 [ProxyClient](https://github.com/GameXG/ProxyClient) 实现上层代理支持，目前支持直连、socks4、socks4a、socks5、http、https、ss 代理线路。
+通过 [ProxyClient](https://github.com/GameXG/ProxyClient) 实现上层代理支持：
+ProxyClient 原生支持直连、socks4、socks4a、socks5、http、https；并通过内置扩展协议能力支持 `shadowsocks://`、`vmess://`、`vless://`、`trojan://`、`wireguard://`、`hysteria2://`（兼容 `ss://`、`hysteria://`、`hy2://`）。
 
 ## 安装
 
 在 [releases](https://github.com/GameXG/TcpRoute2/releases) 页面有二进制发布的可执行文件。根据系统下载对应的文件，并在同一目录创建 config.toml 配置文件即可。
+源码编译时需要包含 `github.com/GameXG/ProxyClient` 的扩展协议依赖组件。
 
 ## 配置
 
@@ -25,7 +27,6 @@
 # 监听地址
 # 目前只对外提供 socks5 协议
 addr="127.0.0.1:7070"
-
 
 # 可以使用的线路列表
 # 连接网络时会自动选择最快的线路。
@@ -48,7 +49,13 @@ Name="https-proxy.com"
 # socks4 代理 socks4://123.123.123.123:5050  socks4 协议不支持远端 dns 解析
 # socks4a 代理 socks4a://123.123.123.123:5050
 # socks5 代理 socks5://123.123.123.123:5050?upProxy=http://145.2.1.3:8080
-# ss 代理 ss://method:passowd@123.123.123:5050
+# shadowsocks 代理 shadowsocks://method:password@123.123.123:5050
+# shadowsocks/vmess/vless/trojan/wireguard/hysteria2 由 ProxyClient 内置扩展协议能力统一处理（兼容 ss/hysteria/hy2）
+# vmess 节点 vmess://base64(json)
+# vless 节点 vless://uuid@host:443?encryption=none&security=tls&type=ws&host=example.com&path=%2F
+# trojan 节点 trojan://password@host:443?security=tls&type=ws&sni=example.com&host=example.com&path=%2F
+# wireguard 节点 wireguard://secretKey@engage.cloudflareclient.com:2408?publicKey=peerPublicKey&address=172.16.0.2%2F32&allowedIPs=0.0.0.0%2F0,::%2F0
+# hysteria2 节点 hysteria2://password@host:443?sni=example.com&insecure=0&alpn=h3
 # 直连 direct://0.0.0.0:0000/?LocalAddr=123.123.123.123:0
 ProxyUrl="https://www.proxy.com:443"
 DnsResolve=false
@@ -63,9 +70,9 @@ Credit=0
 Sleep=80
 
 # 修正延迟
-# ss 协议并不会报告是否连接到了目标网站，所以无法获得真实的到目标网站的 tcpping。
-# 目前只能通过 ss 服务器 tcpping + CorrectDelay 来估算。
-# 非 ss 协议不用设置，ss 协议建议设置为50-100.
+# shadowsocks 协议并不会报告是否连接到了目标网站，所以无法获得真实的到目标网站的 tcpping。
+# 目前只能通过 shadowsocks 服务器 tcpping + CorrectDelay 来估算。
+# 非 shadowsocks 协议不用设置，shadowsocks 协议建议设置为50-100.
 CorrectDelay=0
 
 

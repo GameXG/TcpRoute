@@ -1,10 +1,11 @@
 package netchan
+
 import (
-	"time"
-	"net"
-	"sync"
 	"fmt"
 	"log"
+	"net"
+	"sync"
+	"time"
 )
 
 var queries []queryer
@@ -13,11 +14,11 @@ var rwm = sync.RWMutex{}
 
 // 表示dns 查询
 type DnsQuery struct {
-						// 返回dns查询结果
+	// 返回dns查询结果
 	RecordChan chan *DnsRecord
-						// queries    []queryer
-	exitChan   chan int
-	Domain     string
+	// queries    []queryer
+	exitChan chan int
+	Domain   string
 }
 
 // 表示 DNS 记录
@@ -45,12 +46,12 @@ func init() {
 	sysDns := systemDNS("")
 	queries = append(queries, &sysDns)
 	/*
-	httpDns, err := NewHttpDns("http://127.0.0.1:5353/httpdns")
-	if err != nil {
-		glog.Warning("httpDNS 错误：%v", err)
-	}else {
-		queries = append(queries, httpDns)
-	}*/
+		httpDns, err := NewHttpDns("http://127.0.0.1:5353/httpdns")
+		if err != nil {
+			glog.Warning("httpDNS 错误：%v", err)
+		}else {
+			queries = append(queries, httpDns)
+		}*/
 
 	go searchBlackIP()
 }
@@ -94,7 +95,7 @@ func searchBlackIP() {
 	}
 }
 
-func (dq*DnsQuery) query() {
+func (dq *DnsQuery) query() {
 	wg := sync.WaitGroup{}
 	for _, q := range queries {
 		q := q
@@ -114,7 +115,7 @@ func (dq*DnsQuery) query() {
 	wg.Wait()
 
 	func() {
-		defer func() { recover()}()
+		defer func() { recover() }()
 		close(dq.RecordChan)
 	}()
 }
@@ -126,21 +127,21 @@ func NewDnsQuery(domain string) *DnsQuery {
 	return &q
 }
 
-func (dq*DnsQuery) Stop() {
+func (dq *DnsQuery) Stop() {
 	func() {
-		defer func() { recover()}()
+		defer func() { recover() }()
 		close(dq.exitChan)
 	}()
 
 	func() {
-		defer func() { recover()}()
+		defer func() { recover() }()
 		close(dq.RecordChan)
 	}()
 }
 
 type systemDNS string
 
-func (s *systemDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan int) {
+func (s *systemDNS) query(domain string, RecordChan chan *DnsRecord, ExitChan chan int) {
 	select {
 	case <-ExitChan:
 		return
@@ -178,10 +179,9 @@ func (s *systemDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan cha
 	}()
 
 	func() {
-		defer func() {_=recover()}()
+		defer func() { _ = recover() }()
 		for _, ipString := range ipsString {
 			RecordChan <- &DnsRecord{ipString, 0}
 		}
 	}()
 }
-

@@ -1,26 +1,25 @@
 package main
 
 import (
-	"time"
-	"net"
 	"io"
 	"log"
+	"net"
+	"time"
 )
 
-//
 const (
-// 尝试创建处理器时的conn.read 的timeout
-// 实际是一次性读取数据，所以这个超时指的是客户端必须10秒内发出第一和数据
+	// 尝试创建处理器时的conn.read 的timeout
+	// 实际是一次性读取数据，所以这个超时指的是客户端必须10秒内发出第一和数据
 	handlerNewTimeout = 10 * time.Second
 
-// 默认一个连接的总处理时间，一般都会被实际的处理器修改掉。
+	// 默认一个连接的总处理时间，一般都会被实际的处理器修改掉。
 	handlerBaseTimeout = 10 * time.Minute
 )
 
 type Server struct {
-	Addr     string          // TCP 监听地址
-	hNewer   HandlerNewer    // 请求处理器
-	upStream UpStreamDial    // 上层代理
+	Addr     string       // TCP 监听地址
+	hNewer   HandlerNewer // 请求处理器
+	upStream UpStreamDial // 上层代理
 	ln       net.Listener
 	errConn  *ErrConnService //错误连接统计
 }
@@ -41,7 +40,6 @@ func NewServer(addr string, upStream UpStreamDial) *Server {
 		upStream = localUpStream
 	}
 	srv.upStream = upStream
-
 
 	// 处理器
 	h := NewSwitchHandlerNewer()
@@ -66,7 +64,6 @@ func (srv *Server) ListAndServe() error {
 
 	return srv.Server()
 }
-
 
 func (srv *Server) Server() error {
 	ln := srv.ln
@@ -99,7 +96,7 @@ func (srv *Server) Server() error {
 func (srv *Server) handlerConn(conn net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("work failed:", err)
+			log.Printf("work failed: %v", err)
 		}
 	}()
 	// 是这里调用关闭还是 Handler() 负责？
@@ -120,7 +117,7 @@ func (srv *Server) handlerConn(conn net.Conn) {
 	conn.SetDeadline(time.Now().Add(handlerBaseTimeout))
 	if err := h.Handle(); err != nil {
 		if err != io.EOF {
-			log.Printf("协议处理错误：", err)
+			log.Printf("协议处理错误：%v", err)
 		}
 	}
 }

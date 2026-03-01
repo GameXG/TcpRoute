@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/golang/groupcache/lru"
-	"time"
-	"net/http"
-	"log"
-	"fmt"
-	"os"
 	"encoding/json"
-	"io"
+	"fmt"
 	"github.com/golang/glog"
-	"strings"
+	"github.com/golang/groupcache/lru"
+	"io"
+	"log"
+	"net/http"
+	"os"
 	"regexp"
+	"strings"
 	"sync"
+	"time"
 )
 
 /*
@@ -22,7 +22,6 @@ import (
 */
 
 const DefaultCredit = 0
-
 
 type SpreadRecordDomain struct {
 	domainRegexp *regexp.Regexp
@@ -41,21 +40,20 @@ type IpRecord struct {
 	Credit int //信誉
 }
 
-func (r*IpRecord)String() string {
+func (r *IpRecord) String() string {
 	return fmt.Sprintf("IpRecord{ip:%v, ping:%v, credit:%v}", r.Ip, r.Ping, r.Credit)
 }
-
 
 type FileDNS struct {
 	// 普通的域名列表
 	// k=域名  v=ips
-	domains      map[string][]*IpRecord
+	domains map[string][]*IpRecord
 
 	// 泛解析的域名列表
 	SpreadRecord map[string]*SpreadRecordDomain
 
-	cache        *lru.Cache
-	cacheRwm     sync.RWMutex
+	cache    *lru.Cache
+	cacheRwm sync.RWMutex
 }
 
 func NewFileDns(fpath string) (*FileDNS, error) {
@@ -75,7 +73,7 @@ func NewFileDns(fpath string) (*FileDNS, error) {
 	for {
 		if err := dec.Decode(&r); err == io.EOF {
 			break
-		}else if err != nil {
+		} else if err != nil {
 			glog.Warning(fmt.Sprintf("解析DNS记录文件错误：%v\r\n", err))
 			continue
 		}
@@ -111,7 +109,7 @@ func NewFileDns(fpath string) (*FileDNS, error) {
 	return &fileDns, nil
 }
 
-func (fdns*FileDNS) cacheGet(domain string) []*IpRecord {
+func (fdns *FileDNS) cacheGet(domain string) []*IpRecord {
 	fdns.cacheRwm.RLock()
 	defer fdns.cacheRwm.RUnlock()
 
@@ -122,22 +120,20 @@ func (fdns*FileDNS) cacheGet(domain string) []*IpRecord {
 	return c.([]*IpRecord)
 }
 
-func (fdns*FileDNS) cacheSet(domain string, ips []*IpRecord) {
+func (fdns *FileDNS) cacheSet(domain string, ips []*IpRecord) {
 	fdns.cacheRwm.Lock()
 	defer fdns.cacheRwm.Unlock()
 	fdns.cache.Add(domain, ips)
 }
 
-
-
-func (fdns*FileDNS) query(domain string) []*IpRecord {
+func (fdns *FileDNS) query(domain string) []*IpRecord {
 	domain = strings.ToLower(domain)
 
 	// 解决 google.com.hk 的问题。
 	google_hk := "google.com.hk"
 	if len(domain) > len(google_hk) {
-		if domain[len(domain) - len(google_hk):] == google_hk {
-			domain = domain[:len(domain) - 3]
+		if domain[len(domain)-len(google_hk):] == google_hk {
+			domain = domain[:len(domain)-3]
 		}
 	}
 
@@ -168,7 +164,7 @@ type HttpQueryRes struct {
 	Ips     []*IpRecord
 }
 
-func (fdns*FileDNS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fdns *FileDNS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res := HttpQueryRes{"", 0, "", nil}
 	enc := json.NewEncoder(w)
 
@@ -188,7 +184,6 @@ func (fdns*FileDNS) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-
 func main() {
 	// 载入 DNS 数据
 	fdns, err := NewFileDns("ip-tcping-2.txt")
@@ -200,6 +195,4 @@ func main() {
 
 	log.Fatal(http.ListenAndServe(":5353", nil))
 
-
 }
-

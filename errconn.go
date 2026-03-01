@@ -1,9 +1,10 @@
 package main
+
 import (
+	"fmt"
 	"github.com/golang/groupcache/lru"
 	"sync"
 	"time"
-	"fmt"
 )
 
 /*
@@ -42,9 +43,9 @@ type ErrConnLog struct {
 
 // 缓存
 type ErrConnDomainCache struct {
-						  // dial 错误次数
-						  // addr 错误次数
-						  // 或者说是拒绝的 dial 及 addr
+	// dial 错误次数
+	// addr 错误次数
+	// 或者说是拒绝的 dial 及 addr
 	dial   map[string]int // dial 错误次数
 	ipAddr map[string]int // ipAddr 错误次数
 }
@@ -55,7 +56,6 @@ type ErrConnDomain struct {
 	cache            *ErrConnDomainCache
 	cacheExpiredTime time.Time //到达这个时间表示 cache 需要根据 log 重新生成
 }
-
 
 // 异常连接 相关服务
 type ErrConnService struct {
@@ -70,7 +70,7 @@ func NewErrConnService() *ErrConnService {
 }
 
 // 非线程安全
-func (ec*ErrConnService)get(domainAddr string) *ErrConnDomain {
+func (ec *ErrConnService) get(domainAddr string) *ErrConnDomain {
 	v, ok := ec.lru.Get(domainAddr)
 	if ok != true {
 		return nil
@@ -80,13 +80,12 @@ func (ec*ErrConnService)get(domainAddr string) *ErrConnDomain {
 }
 
 // 非线程安全
-func (ec*ErrConnService)set(domain *ErrConnDomain) {
+func (ec *ErrConnService) set(domain *ErrConnDomain) {
 	ec.lru.Add(domain.domainAddr, domain)
 }
 
-
 // 增加异常记录
-func (ec*ErrConnService)AddErrLog(dialName, domainAddr, ipAddr string, errType ErrConnType) {
+func (ec *ErrConnService) AddErrLog(dialName, domainAddr, ipAddr string, errType ErrConnType) {
 	ec.m.Lock()
 	defer ec.m.Unlock()
 
@@ -107,7 +106,7 @@ func (ec*ErrConnService)AddErrLog(dialName, domainAddr, ipAddr string, errType E
 // 否则域名为阻断关键字时将会不断的阻断可用ip，知道全部ip都完蛋为止
 // 如果启用了全球解析，那么需要挂掉很多ip。
 // 返回值： true 表示安全 false 表示不建议使用
-func (ec*ErrConnService)Check(dialName, domainAddr, ipAddr string) bool {
+func (ec *ErrConnService) Check(dialName, domainAddr, ipAddr string) bool {
 	ec.m.Lock()
 	defer ec.m.Unlock()
 
@@ -135,7 +134,7 @@ func (ec*ErrConnService)Check(dialName, domainAddr, ipAddr string) bool {
 
 // 删除过期的内容
 // 重新生成 cache
-func (d *ErrConnDomain)refresh() {
+func (d *ErrConnDomain) refresh() {
 	d.cache = &ErrConnDomainCache{}
 	d.cache.dial = make(map[string]int)
 	d.cache.ipAddr = make(map[string]int)
