@@ -27,7 +27,7 @@ Name="https-proxy.com"
 # socks4a 代理 socks4a://123.123.123.123:5050
 # socks5 代理 socks5://123.123.123.123:5050?upProxy=http://145.2.1.3:8080
 # shadowsocks 代理 shadowsocks://method:password@123.123.123:5050
-# shadowsocks/vmess/vless/trojan/wireguard/hysteria2 由 ProxyClient 内置扩展协议能力统一处理（兼容 ss/hysteria/hy2）
+# shadowsocks/vmess/vless/trojan/wireguard/hysteria2 由 ProxyClient 内置 xray-core 统一处理（兼容 ss/hysteria/hy2）
 # vmess 示例 vmess://base64(json)
 # vless 示例 vless://uuid@host:443?encryption=none&security=tls&type=ws&host=example.com&path=%2F
 # trojan 示例 trojan://password@host:443?security=tls&type=ws&sni=example.com&host=example.com&path=%2F

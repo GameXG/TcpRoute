@@ -8,12 +8,12 @@
 通过 socks5 代理协议对外提供服务。
 
 通过 [ProxyClient](https://github.com/GameXG/ProxyClient) 实现上层代理支持：
-ProxyClient 原生支持直连、socks4、socks4a、socks5、http、https；并通过内置扩展协议能力支持 `shadowsocks://`、`vmess://`、`vless://`、`trojan://`、`wireguard://`、`hysteria2://`（兼容 `ss://`、`hysteria://`、`hy2://`）。
+ProxyClient 原生支持直连、socks4、socks4a、socks5、http、https；并通过内置 `xray-core` 协议引擎支持 `shadowsocks://`、`vmess://`、`vless://`、`trojan://`、`wireguard://`、`hysteria2://`（兼容 `ss://`、`hysteria://`、`hy2://`）。
 
 ## 安装
 
 在 [releases](https://github.com/GameXG/TcpRoute2/releases) 页面有二进制发布的可执行文件。根据系统下载对应的文件，并在同一目录创建 config.toml 配置文件即可。
-源码编译时需要包含 `github.com/GameXG/ProxyClient` 的扩展协议依赖组件。
+源码编译时需要包含 `github.com/GameXG/ProxyClient` 的 `xray-core` 依赖组件。
 
 ## 配置
 
@@ -50,7 +50,7 @@ Name="https-proxy.com"
 # socks4a 代理 socks4a://123.123.123.123:5050
 # socks5 代理 socks5://123.123.123.123:5050?upProxy=http://145.2.1.3:8080
 # shadowsocks 代理 shadowsocks://method:password@123.123.123:5050
-# shadowsocks/vmess/vless/trojan/wireguard/hysteria2 由 ProxyClient 内置扩展协议能力统一处理（兼容 ss/hysteria/hy2）
+# shadowsocks/vmess/vless/trojan/wireguard/hysteria2 由 ProxyClient 内置 xray-core 统一处理（兼容 ss/hysteria/hy2）
 # vmess 节点 vmess://base64(json)
 # vless 节点 vless://uuid@host:443?encryption=none&security=tls&type=ws&host=example.com&path=%2F
 # trojan 节点 trojan://password@host:443?security=tls&type=ws&sni=example.com&host=example.com&path=%2F
