@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menuAdvancedToml"
+        android:title="@string/advanced_toml" />
+    <item
+        android:id="@+id/menuImportFile"
+        android:title="@string/import_config" />
+    <item
+        android:id="@+id/menuImportOnline"
+        android:title="@string/import_online_config" />
+    <item
+        android:id="@+id/menuExport"
+        android:title="@string/export_config" />
+    <item
+        android:id="@+id/menuGeoData"
+        android:title="@string/geodata_manager" />
+    <item
+        android:id="@+id/menuWifiProxy"
+        android:title="@string/wifi_proxy" />
+    <item
+        android:id="@+id/menuLanguage"
+        android:title="@string/language_dialog_title" />
+</menu>

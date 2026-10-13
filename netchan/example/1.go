@@ -1,12 +1,11 @@
 package main
+
 import (
-	"github.com/gamexg/proxyclient"
-	"time"
 	"fmt"
-	"github.com/gamexg/TcpRoute2/netchan"
+	"github.com/GameXG/ProxyClient"
+	"github.com/GameXG/TcpRoute2/netchan"
+	"time"
 )
-
-
 
 func main() {
 	connChan := make(chan netchan.ConnRes)
@@ -19,7 +18,7 @@ func main() {
 	}
 
 	go func() {
-		netchan.ChanDialTimeout(dial, 0, connChan, exitChan, true, nil, nil, "tcp", "www.163.com:80", 5 * time.Second)
+		netchan.ChanDialTimeout(dial, 0, connChan, exitChan, true, nil, nil, "tcp", "www.163.com:80", 5*time.Second)
 		close(connChan)
 	}()
 

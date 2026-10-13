@@ -1,7 +1,11 @@
 package netchan
+
 import (
-	"github.com/golang/glog"
 	"fmt"
+	"github.com/golang/glog"
+	"net"
+	"os"
+	"strings"
 )
 
 /*
@@ -16,19 +20,19 @@ import (
 // 端口需要的安全等级
 // 例如 80 端口的安全等级是0，表示 -100 的 ip 不能用在 80 端口的访问上面。
 // 主要目的是通过一些渠道获得的ip不可靠，不建议 80 之类的不安全的协议使用不可靠的 ip。
-var SAFE_PORET_LIST  map[int]int = map[int]int{
-	21:0, //ftp
-	22:0, //ssh(虽然 ssh 有公钥加密，但是第一次连接时有可能碰到中间人攻击)
-	23:0, //telnet
-	25: 0, //smtp
-	53: 0, //dns
-	80:0, //http
-	110: 0, //pop3
-	443:-500, //https
-	465: -500, // smtp ssl
-	993: -500, //imap ssl
-	995: -500, // pop ssl
-	3389: 0, // windows 远程桌面
+var SAFE_PORET_LIST map[int]int = map[int]int{
+	21:   0,    //ftp
+	22:   0,    //ssh(虽然 ssh 有公钥加密，但是第一次连接时有可能碰到中间人攻击)
+	23:   0,    //telnet
+	25:   0,    //smtp
+	53:   0,    //dns
+	80:   0,    //http
+	110:  0,    //pop3
+	443:  -500, //https
+	465:  -500, // smtp ssl
+	993:  -500, //imap ssl
+	995:  -500, // pop ssl
+	3389: 0,    // windows 远程桌面
 }
 
 type DialFilterer interface {
@@ -60,7 +64,10 @@ func NewDialFilter(port_list map[int]int) *dialFilter {
 /*
 过滤不安全
 */
-func (d*dialFilter)DialFilter(network, host, ip string, port int, dialCredit, ipCredit int) bool {
+func (d *dialFilter) DialFilter(network, host, ip string, port int, dialCredit, ipCredit int) bool {
+	if parsed := net.ParseIP(ip); parsed != nil && parsed.To4() == nil && !ipv6Enabled() {
+		return false
+	}
 	credit := dialCredit
 	if ipCredit < credit {
 		credit = ipCredit
@@ -81,4 +88,9 @@ func (d*dialFilter)DialFilter(network, host, ip string, port int, dialCredit, ip
 		glog.Info(fmt.Sprintf("%v %v(%v):%v dialCreadit=%v ipCredit=%v 信任度低，拒绝访问。", network, host, ip, port, dialCredit, ipCredit))
 		return false
 	}
+}
+
+func ipv6Enabled() bool {
+	value := strings.TrimSpace(strings.ToLower(os.Getenv("TCPROUTE_ENABLE_IPV6")))
+	return value == "1" || value == "true" || value == "yes" || value == "on"
 }

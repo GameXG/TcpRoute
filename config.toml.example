@@ -2,13 +2,36 @@
 # https://github.com/GameXG/TcpRoute2
 
 # 监听地址
-# 目前只对外提供 socks5 协议
+# 同一端口提供 SOCKS5、HTTP 代理和 HTTPS CONNECT。
 addr="127.0.0.1:7070"
 
+# DNS sources are optional. Lower Priority runs first; ties keep TOML order.
+# Failed/unusable DoH responses fall back to the next source, then system DNS.
+# A valid NXDOMAIN is final. DoH uses direct HTTPS with system bootstrap DNS.
+#[[Dns]]
+#Type="doh"
+#URL="https://cloudflare-dns.com/dns-query"
+#Priority=10
+#Timeout="3s"
+
+# 可选 hosts 规则源：支持本地 hosts 文件或 HTTP/HTTPS 远程规则。
+#[[Hosts]]
+#Path="hosts/local.txt"
+#Type="base"
+#Credit=0
+#UpdateInterval="24h"
+# Type 支持 base、suffix、pan、regex；同一域名可提供多个候选地址。
+# DnsResolve=true 时，命中 Host 就只使用其地址；未命中才查询 DNS。
+# 同一域名的多个 Host 地址可竞速；过滤或连接失败不会回退到 DNS。
+
+# 客户端已经把域名解析为 IP 时，从 HTTP Host/TLS SNI 恢复域名。
+# 默认分别为 [80] 和 [443]；设置 [0] 可关闭对应协议的纠正。
+#PreHttpPorts=[80]
+#PreHttpsPorts=[443]
 
 # 可以使用的线路列表
 # 连接网络时会自动选择最快的线路。
-# 注意，直连线路也需要提供，否则不会通过直连访问网络。
+# 建议显式保留直连线路；未配置时核心会自动补入内置 Direct。
 
 [[UpStreams]]
 Name="direct"
@@ -24,10 +47,16 @@ Name="https-proxy.com"
 # 目前支持以下格式
 # http 代理 http://123.123.123.123:8088
 # https 代理 https://123.123.123.123:8088
-# socks4 代理 socks4://123.123.123.123:5050  socks4 协议不支持远端 dns 解析
-# socks4a 代理 socks4a://123.123.123.123:5050
+# 旧版兼容（不再建议新建）：socks4://123.123.123.123:5050  socks4 协议不支持远端 dns 解析
+# 旧版兼容（不再建议新建）：socks4a://123.123.123.123:5050
 # socks5 代理 socks5://123.123.123.123:5050?upProxy=http://145.2.1.3:8080
-# ss 代理 ss://method:passowd@123.123.123:5050
+# shadowsocks 代理 shadowsocks://method:password@123.123.123:5050
+# shadowsocks/vmess/vless/trojan/wireguard/hysteria2 由 ProxyClient 内置 xray-core 统一处理（兼容 ss/hysteria/hy2）
+# vmess 示例 vmess://base64(json)
+# vless 示例 vless://uuid@host:443?encryption=none&security=tls&type=ws&host=example.com&path=%2F
+# trojan 示例 trojan://password@host:443?security=tls&type=ws&sni=example.com&host=example.com&path=%2F
+# wireguard 示例 wireguard://secretKey@engage.cloudflareclient.com:2408?publicKey=peerPublicKey&address=172.16.0.2%2F32&allowedIPs=0.0.0.0%2F0,::%2F0
+# hysteria2 示例 hysteria2://password@host:443?sni=example.com&insecure=0&alpn=h3
 # 直连 direct://0.0.0.0:0000/?LocalAddr=123.123.123.123:0
 ProxyUrl="https://www.proxy.com:443"
 DnsResolve=false
@@ -42,7 +71,28 @@ Credit=0
 Sleep=80
 
 # 修正延迟
-# ss 协议并不会报告是否连接到了目标网站，所以无法获得真实的到目标网站的 tcpping。
-# 目前只能通过 ss 服务器 tcpping + CorrectDelay 来估算。
-# 非 ss 协议不用设置，ss 协议建议设置为50-100.
+# shadowsocks 协议并不会报告是否连接到了目标网站，所以无法获得真实的到目标网站的 tcpping。
+# 目前只能通过 shadowsocks 服务器 tcpping + CorrectDelay 来估算。
+# 非 shadowsocks 协议不用设置，shadowsocks 协议建议设置为50-100.
 CorrectDelay=0
+
+# 分流规则属于当前上游，可配置多个白名单和黑名单来源。
+# 本地/远程文件通过 Type 指定每行的匹配方式：base、suffix、pan、regex。
+#[[UpStreams.Whitelist]]
+#Path="rules/proxy.txt"
+#Type="suffix"
+
+#[[UpStreams.Whitelist]]
+#Path="https://example.com/proxy.txt"
+#Type="suffix"
+#UpdateInterval="24h"
+
+# Geosite 从 TcpRoute2 程序所在目录加载 geosite.dat；文件缺少时启动报错。
+#[[UpStreams.Whitelist]]
+#Type="geosite"
+#Path="geosite:apple,geosite:google"
+
+# GeoIP 匹配没有域名的 IPv4/IPv6 目标；内置数据文件由客户端统一管理。
+#[[UpStreams.Whitelist]]
+#Type="geoip"
+#Path="geoip:cn,geoip:private"

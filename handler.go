@@ -1,16 +1,29 @@
 package main
+
 import (
 	"fmt"
-	"net"
-	"time"
+	"github.com/inconshreveable/go-vhost"
 	"io"
+	"net"
+	"strconv"
+	"strings"
 	"sync/atomic"
+	"time"
 )
 
 const (
-	handlerTimeoutHello = 10 * time.Second// 握手 timeout 鉴定 + 接受 CMD 的总允许时间
-	handlerTimeoutConnect = 10 * time.Second// 连接目标地址超时
-	handlerTimeoutForward = 5 * time.Minute// 转发超时 每次转发数据都会重置这个超时时间
+	preProtocolUnknown = iota
+	preProtocolHTTP
+	preProtocolHTTPS
+)
+
+var preHttpPorts = []int{80}
+var preHttpsPorts = []int{443}
+
+const (
+	handlerTimeoutHello   = 10 * time.Second // 握手 timeout 鉴定 + 接受 CMD 的总允许时间
+	handlerTimeoutConnect = 10 * time.Second // 连接目标地址超时
+	handlerTimeoutForward = 5 * time.Minute  // 转发超时 每次转发数据都会重置这个超时时间
 )
 
 // NoHandle 无法处理的协议类型
@@ -40,6 +53,75 @@ type HandlerNewer interface {
 	New(conn net.Conn) (h Handler, rePre bool, err error)
 }
 
+// CheckPre enables the v0.5.14 DNS-correction path only when a SOCKS client
+// supplied an IP address for a configured HTTP or HTTPS port.
+func CheckPre(network, address string) int {
+	if !strings.HasPrefix(network, "tcp") {
+		return preProtocolUnknown
+	}
+	host, port, err := net.SplitHostPort(address)
+	if err != nil || net.ParseIP(host) == nil {
+		return preProtocolUnknown
+	}
+	portNumber, err := strconv.Atoi(port)
+	if err != nil {
+		return preProtocolUnknown
+	}
+	if containsPort(preHttpPorts, portNumber) {
+		return preProtocolHTTP
+	}
+	if containsPort(preHttpsPorts, portNumber) {
+		return preProtocolHTTPS
+	}
+	return preProtocolUnknown
+}
+
+// Pre reads HTTP Host or TLS SNI from the pre-read connection and restores
+// the domain name while preserving the original destination port.
+func Pre(conn net.Conn, address string, protocol int) (net.Conn, string, bool) {
+	_, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return conn, address, false
+	}
+	var rawHost string
+	switch protocol {
+	case preProtocolHTTP:
+		parsed, err := vhost.HTTP(conn)
+		if err != nil {
+			return parsed, address, false
+		}
+		conn = parsed
+		rawHost = parsed.Host()
+		parsed.Free()
+	case preProtocolHTTPS:
+		parsed, err := vhost.TLS(conn)
+		if err != nil {
+			return parsed, address, false
+		}
+		conn = parsed
+		rawHost = parsed.Host()
+		parsed.Free()
+	default:
+		return conn, address, false
+	}
+	if rawHost == "" {
+		return conn, address, false
+	}
+	if host, _, err := net.SplitHostPort(rawHost); err == nil {
+		rawHost = host
+	}
+	return conn, net.JoinHostPort(rawHost, port), true
+}
+
+func containsPort(ports []int, target int) bool {
+	for _, port := range ports {
+		if port == target {
+			return true
+		}
+	}
+	return false
+}
+
 // 转发计数
 // 使用 atomic 实现原子操作
 type forwardCount struct {
@@ -65,11 +147,11 @@ func _forwardConn(sConn, oConn net.Conn, timeout time.Duration, errChan chan err
 		if n, err := sConn.Read(buf[:forwardBufSize]); err != nil {
 			if err == io.EOF {
 				errChan <- err
-			}else {
+			} else {
 				errChan <- fmt.Errorf("转发读错误：%v", err)
 			}
 			return
-		}else {
+		} else {
 			buf = buf[:n]
 		}
 
@@ -82,7 +164,7 @@ func _forwardConn(sConn, oConn net.Conn, timeout time.Duration, errChan chan err
 			if n, err := oConn.Write(wbuf); err != nil {
 				if err == io.EOF {
 					errChan <- err
-				}else {
+				} else {
 					errChan <- fmt.Errorf("转发写错误：%v", err)
 				}
 				return

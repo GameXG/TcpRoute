@@ -1,23 +1,26 @@
 package netchan
+
 import (
-	"time"
-	"net"
-	"sync"
 	"fmt"
 	"log"
+	"net"
+	"sync"
+	"time"
 )
 
 var queries []queryer
+var queryRWM sync.RWMutex
+var blackIPMonitorOnce sync.Once
 var blackIP = make(map[string]bool)
 var rwm = sync.RWMutex{}
 
 // 表示dns 查询
 type DnsQuery struct {
-						// 返回dns查询结果
+	// 返回dns查询结果
 	RecordChan chan *DnsRecord
-						// queries    []queryer
-	exitChan   chan int
-	Domain     string
+	// queries    []queryer
+	exitChan chan int
+	Domain   string
 }
 
 // 表示 DNS 记录
@@ -45,14 +48,13 @@ func init() {
 	sysDns := systemDNS("")
 	queries = append(queries, &sysDns)
 	/*
-	httpDns, err := NewHttpDns("http://127.0.0.1:5353/httpdns")
-	if err != nil {
-		glog.Warning("httpDNS 错误：%v", err)
-	}else {
-		queries = append(queries, httpDns)
-	}*/
+		httpDns, err := NewHttpDns("http://127.0.0.1:5353/httpdns")
+		if err != nil {
+			glog.Warning("httpDNS 错误：%v", err)
+		}else {
+			queries = append(queries, httpDns)
+		}*/
 
-	go searchBlackIP()
 }
 
 func searchBlackIP() {
@@ -67,7 +69,7 @@ func searchBlackIP() {
 			exitChan := make(chan int, 10)
 
 			go func() {
-				for _, q := range queries {
+				for _, q := range blackIPQuerySnapshot() {
 					domain := fmt.Sprint(time.Now().Unix(), "dshsdjhsdsgsevstyhndrdrntrtvsvstbruiuok095g.com")
 					q.query(domain, recordChan, exitChan)
 				}
@@ -84,7 +86,9 @@ func searchBlackIP() {
 			defer rwm.Unlock()
 			blackIP = bIP
 		}()
-		log.Println("发现异常IP：", blackIP)
+		if len(bIP) > 0 {
+			log.Println("发现异常IP：", bIP)
+		}
 	}
 
 	run()
@@ -94,9 +98,32 @@ func searchBlackIP() {
 	}
 }
 
-func (dq*DnsQuery) query() {
+func (dq *DnsQuery) query() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("query panic:", err)
+		}
+		func() {
+			defer func() { _ = recover() }()
+			close(dq.RecordChan)
+		}()
+	}()
+	snapshot := querySnapshot()
+	// Hosts overrides DNS even when later connection filtering rejects every
+	// address. Falling back would silently bypass an explicit mapping.
+	for _, q := range snapshot {
+		if hosts, ok := q.(*hostsResolverQuery); ok {
+			if records := hosts.resolver(dq.Domain); len(records) > 0 {
+				sendHostRecords(records, dq.RecordChan, dq.exitChan)
+				return
+			}
+		}
+	}
 	wg := sync.WaitGroup{}
-	for _, q := range queries {
+	for _, q := range snapshot {
+		if _, ok := q.(*hostsResolverQuery); ok {
+			continue
+		}
 		q := q
 		wg.Add(1)
 		go func() {
@@ -112,11 +139,60 @@ func (dq*DnsQuery) query() {
 		}()
 	}
 	wg.Wait()
+}
 
-	func() {
-		defer func() { recover()}()
-		close(dq.RecordChan)
-	}()
+func querySnapshot() []queryer {
+	queryRWM.RLock()
+	defer queryRWM.RUnlock()
+	return append([]queryer(nil), queries...)
+}
+
+func blackIPQuerySnapshot() []queryer {
+	snapshot := querySnapshot()
+	filtered := make([]queryer, 0, len(snapshot))
+	for _, query := range snapshot {
+		if _, ok := query.(*hostsResolverQuery); ok {
+			continue
+		}
+		filtered = append(filtered, query)
+	}
+	return filtered
+}
+
+type hostsResolverQuery struct {
+	resolver func(string) []DnsRecord
+}
+
+func (q *hostsResolverQuery) query(domain string, recordChan chan *DnsRecord, exitChan chan int) {
+	sendHostRecords(q.resolver(domain), recordChan, exitChan)
+}
+
+func sendHostRecords(records []DnsRecord, recordChan chan *DnsRecord, exitChan chan int) {
+	for _, record := range records {
+		record := record
+		select {
+		case <-exitChan:
+			return
+		case recordChan <- &record:
+		}
+	}
+}
+
+// SetHostsResolver installs a hosts override for local resolution. A match
+// replaces DNS results while retaining all addresses and their source Credit.
+func SetHostsResolver(resolver func(string) []DnsRecord) {
+	queryRWM.Lock()
+	defer queryRWM.Unlock()
+	filtered := make([]queryer, 0, len(queries)+1)
+	for _, query := range queries {
+		if _, ok := query.(*hostsResolverQuery); !ok {
+			filtered = append(filtered, query)
+		}
+	}
+	if resolver != nil {
+		filtered = append(filtered, &hostsResolverQuery{resolver: resolver})
+	}
+	queries = filtered
 }
 
 // 返回 DNS 记录信道及取消信道
@@ -126,21 +202,21 @@ func NewDnsQuery(domain string) *DnsQuery {
 	return &q
 }
 
-func (dq*DnsQuery) Stop() {
+func (dq *DnsQuery) Stop() {
 	func() {
-		defer func() { recover()}()
+		defer func() { recover() }()
 		close(dq.exitChan)
 	}()
 
 	func() {
-		defer func() { recover()}()
+		defer func() { recover() }()
 		close(dq.RecordChan)
 	}()
 }
 
 type systemDNS string
 
-func (s *systemDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan int) {
+func (s *systemDNS) query(domain string, RecordChan chan *DnsRecord, ExitChan chan int) {
 	select {
 	case <-ExitChan:
 		return
@@ -178,10 +254,9 @@ func (s *systemDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan cha
 	}()
 
 	func() {
-		defer func() {_=recover()}()
+		defer func() { _ = recover() }()
 		for _, ipString := range ipsString {
 			RecordChan <- &DnsRecord{ipString, 0}
 		}
 	}()
 }
-

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">TcpRoute2</string>
+    <string name="brand_name" translatable="false">TCPROUTE2</string>
+    <string name="language_button">Language · %1$s</string>
+    <string name="more_options">More options</string>
+    <string name="language_dialog_title">App language</string>
+    <string name="language_system">Follow system</string>
+    <string name="language_english">English</string>
+    <string name="language_simplified_chinese">简体中文</string>
+    <string name="language_traditional_chinese">繁體中文</string>
+
+    <string name="status_ready_title">READY</string>
+    <string name="status_ready_message">Configure a route, then start VPN or SOCKS.</string>
+    <string name="hero_title">Your traffic, your route.</string>
+    <string name="default_endpoint" translatable="false">127.0.0.1:7070</string>
+    <string name="endpoint_format" translatable="false">%1$s:%2$d</string>
+    <string name="vpn_endpoint" translatable="false">VPN · 10.7.0.2</string>
+
+    <string name="start_vpn">Start VPN</string>
+    <string name="start_socks">Start SOCKS</string>
+    <string name="stop_vpn">Stop VPN</string>
+    <string name="stop_socks">Stop SOCKS</string>
+    <string name="request_log">Request log</string>
+    <string name="request_log_eyebrow">LIVE OUTPUT</string>
+    <string name="request_log_title">TcpRoute2 request log</string>
+    <string name="request_log_description">Live routing output from the active TcpRoute2 VPN or SOCKS process. New output appears automatically.</string>
+    <string name="request_log_waiting">WAITING FOR OUTPUT</string>
+    <string name="request_log_live">LIVE · AUTO-REFRESH</string>
+    <string name="request_log_empty">No log output yet. Start SOCKS and send traffic through TcpRoute2 to see activity here.</string>
+    <string name="request_log_truncated">Showing the latest 256 KB of log output.\n\n%1$s</string>
+    <string name="clear_request_log">Clear</string>
+    <string name="clear_request_log_confirm">Clear the current VPN or SOCKS session log?</string>
+    <string name="request_log_cleared">Request log cleared</string>
+    <string name="request_log_clear_failed">Unable to clear request log</string>
+    <string name="allow_lan">Allow other LAN devices to use SOCKS</string>
+    <string name="allow_stun">Allow STUN</string>
+    <string name="allow_quic">Allow QUIC</string>
+    <string name="enable_ipv6">Enable IPv6</string>
+
+    <string name="routes_eyebrow">CONNECTION</string>
+    <string name="routes_title">Connection configuration</string>
+    <string name="advanced_toml">Advanced TOML</string>
+    <string name="listen_port">SOCKS listen port</string>
+    <string name="default_upstream">Default upstream</string>
+    <string name="default_upstream_hint">Empty = automatically select the fastest</string>
+    <string name="port_hint" translatable="false">7070</string>
+    <string name="add_direct">+ Direct</string>
+    <string name="add_proxy">+ Proxy</string>
+    <string name="choose_proxy_type">Choose proxy type</string>
+    <string name="invalid_proxy_url">Invalid proxy format for the selected protocol</string>
+    <string name="proxy_url_valid">Proxy URL is valid</string>
+    <string name="proxy_error_empty_or_whitespace">Enter a proxy URL without spaces or line breaks.</string>
+    <string name="proxy_error_malformed">The proxy URL is malformed.</string>
+    <string name="proxy_error_scheme">The proxy URL needs a protocol prefix such as vmess://.</string>
+    <string name="proxy_error_unsupported">Unsupported proxy protocol: %1$s</string>
+    <string name="proxy_error_direct_incomplete">The Direct URL is incomplete.</string>
+    <string name="proxy_error_vmess_base64">The VMess payload is not valid Base64.</string>
+    <string name="proxy_error_vmess_json">The VMess payload does not contain valid JSON.</string>
+    <string name="proxy_error_vmess_json_incomplete">VMess JSON must contain add, port, and id.</string>
+    <string name="proxy_error_vmess_payload_incomplete">The decoded VMess payload is incomplete.</string>
+    <string name="proxy_error_shadowsocks_base64">The Shadowsocks payload is not valid Base64.</string>
+    <string name="proxy_error_shadowsocks_payload">The decoded Shadowsocks payload is incomplete.</string>
+    <string name="proxy_error_encoded_base64">The encoded proxy payload is not valid Base64.</string>
+    <string name="proxy_error_encoded_payload">The decoded proxy payload is incomplete.</string>
+    <string name="proxy_error_host">The proxy URL needs a server host.</string>
+    <string name="proxy_error_port">The proxy URL needs a port from 1 to 65535.</string>
+    <string name="proxy_error_path">This proxy protocol does not support a URL path.</string>
+    <string name="proxy_error_shadowsocks_credentials">Shadowsocks needs an encryption method and password.</string>
+    <string name="proxy_error_credentials">Credentials are required before the server host.</string>
+    <string name="proxy_error_wireguard_parameters">WireGuard needs publicKey and address parameters.</string>
+    <string name="import_config">Import file</string>
+    <string name="import_online_config">Import URL</string>
+    <string name="export_config">Export configuration</string>
+    <string name="geodata_manager">Geo data</string>
+    <string name="geodata_status_format">Geosite: %1$s\nGeoIP: %2$s\nLast update: %3$s\nLast error: %4$s\n\nAutomatic updates</string>
+    <string name="geodata_never_updated">Bundled version</string>
+    <string name="geodata_no_error">None</string>
+    <string name="geodata_auto_off">Off</string>
+    <string name="geodata_auto_daily">Daily</string>
+    <string name="geodata_auto_weekly">Weekly</string>
+    <string name="geodata_update_now">Update now</string>
+    <string name="online_config_url_hint" translatable="false">https://example.com/tcproute.toml</string>
+    <string name="online_config_url_error">Enter a valid HTTP or HTTPS URL</string>
+    <string name="full_config">Full TcpRoute2 configuration</string>
+    <string name="save_profile">Save profile</string>
+    <string name="rule_sets">Upstream rules</string>
+    <string name="routing_config_eyebrow">ROUTING</string>
+    <string name="routing_config_title">Rule configuration</string>
+    <string name="rule_sets_description">Select an upstream, then add any number of whitelist and blacklist sources to that upstream.</string>
+    <string name="rule_upstream">Rule upstream</string>
+    <string name="add_whitelist">+ Whitelist</string>
+    <string name="add_blacklist">+ Blacklist</string>
+    <string name="add_local_rule">+ Local</string>
+    <string name="add_remote_rule">+ Remote</string>
+    <string name="add_geosite_rule">+ Geosite</string>
+    <string name="hosts_config_eyebrow">HOSTS</string>
+    <string name="hosts_config_title">Host configuration</string>
+    <string name="hosts_config_description">Load local or remote hosts files with match type and Credit. With local resolution enabled, matching hosts addresses override DNS.</string>
+    <string name="add_host">+ Host source</string>
+    <string name="choose_host_source_type">Choose Host source type</string>
+    <string name="choose_rule_source_type">Choose rule source type</string>
+
+    <string name="app_routing_title">App configuration</string>
+    <string name="app_routing_note">Applies only to built-in VPN. In SOCKS mode, the SOCKS client or Proxifier decides which apps use TcpRoute2.</string>
+    <string name="search_apps">Search apps or package names</string>
+    <string name="select_apps">Select apps</string>
+    <string name="select_apps_dialog_title">Select apps</string>
+    <string name="apply_app_selection">Apply</string>
+    <string name="footer">TcpRoute2 · private routing on your terms</string>
+
+    <string name="status_permission_title">PERMISSION NEEDED</string>
+    <string name="status_permission_message">VPN permission was not granted.</string>
+    <string name="status_vpn_stopped_title">VPN STOPPED</string>
+    <string name="status_vpn_stopped_message">Built-in VPN has been stopped.</string>
+    <string name="status_socks_starting_title">SOCKS STARTING</string>
+    <string name="status_socks_starting_lan">Local proxy requested and available to your LAN.</string>
+    <string name="status_socks_starting_local">Local proxy requested for apps on this device.</string>
+    <string name="status_socks_stopped_title">SOCKS STOPPED</string>
+    <string name="status_socks_stopped_message">Local SOCKS proxy has been stopped.</string>
+    <string name="status_socks_running_title">SOCKS ACTIVE</string>
+    <string name="status_socks_running_message">The local SOCKS proxy is ready.</string>
+    <string name="status_socks_failed_title">SOCKS FAILED</string>
+    <string name="status_socks_failed_message">TcpRoute2 could not start. Check the service log.</string>
+    <string name="status_select_apps_title">SELECT APPS</string>
+    <string name="status_select_apps_message">Choose at least one app for the VPN allowlist.</string>
+    <string name="status_vpn_starting_title">VPN STARTING</string>
+    <string name="status_vpn_starting_message">Device traffic is being handed to TcpRoute2.</string>
+    <string name="status_vpn_running_title">VPN ACTIVE</string>
+    <string name="status_vpn_running_message">Device traffic is now routed through TcpRoute2.</string>
+    <string name="status_vpn_failed_title">VPN FAILED</string>
+    <string name="status_vpn_failed_message">The VPN bridge could not start. Check the VPN log for details.</string>
+    <string name="status_profile_saved_title">PROFILE SAVED</string>
+    <string name="status_profile_saved_message">Configuration was written to TOML.</string>
+    <string name="status_advanced_saved_message">TOML was saved and loaded into the visual configuration.</string>
+    <string name="status_check_profile_title">CHECK PROFILE</string>
+    <string name="status_save_profile_failed">Check the connection, rule, and Host settings.</string>
+    <string name="status_proxy_save_failed">Upstream %1$s was not saved: %2$s</string>
+    <string name="status_save_failed_reason">Configuration was not saved: %1$s</string>
+    <string name="status_check_toml_title">CHECK TOML</string>
+    <string name="status_save_toml_failed">Check the TOML listen address, upstreams, and routing rules.</string>
+    <string name="status_config_imported_title">CONFIG IMPORTED</string>
+    <string name="status_config_imported_message">The imported configuration is valid and ready to use.</string>
+    <string name="status_config_import_failed">The configuration could not be imported or is invalid.</string>
+    <string name="status_config_exported_title">CONFIG EXPORTED</string>
+    <string name="status_config_exported_message">The current configuration was exported.</string>
+    <string name="status_config_export_failed">The configuration could not be exported.</string>
+    <string name="geodata_updating_title">UPDATING GEO DATA</string>
+    <string name="geodata_updating_message">Downloading and verifying Geosite and GeoIP.</string>
+    <string name="geodata_updated_title">GEO DATA UPDATED</string>
+    <string name="geodata_updated_message">Geosite and GeoIP are ready to use.</string>
+    <string name="geodata_failed_title">GEO DATA UPDATE FAILED</string>
+    <string name="geodata_failed_message">The existing verified data was kept.</string>
+
+    <string name="route_name_hint">Route name</string>
+    <string name="proxy_url_hint" translatable="false">socks5://host:port</string>
+    <string name="resolve_dns_locally">Resolve DNS locally</string>
+    <string name="remove">Remove</string>
+    <string name="field_name">Name</string>
+    <string name="field_proxy_url">Proxy URL</string>
+    <string name="field_credit">Credit</string>
+    <string name="field_sleep_ms">Sleep ms</string>
+    <string name="field_delay_ms">Delay ms</string>
+    <string name="field_host">Host name</string>
+    <string name="field_address">IP address</string>
+    <string name="host_name_hint" translatable="false">example.com</string>
+    <string name="host_address_hint" translatable="false">192.0.2.1</string>
+    <string name="host_number">HOST %1$d</string>
+    <string name="upstream_number">UPSTREAM %1$d</string>
+    <string name="rule_number">RULE SET %1$d</string>
+    <string name="whitelist_rule_number">WHITELIST %1$d</string>
+    <string name="blacklist_rule_number">BLACKLIST %1$d</string>
+    <string name="field_type">Type</string>
+    <string name="field_source_type">Source</string>
+    <string name="field_match_type">Match type</string>
+    <string name="field_source">Path (file or URL)</string>
+    <string name="field_geosite_rule">Geosite rules</string>
+    <string name="field_geosite_path">Path (local or remote Geosite data)</string>
+    <string name="field_geoip_rule">GeoIP rules</string>
+    <string name="field_geoip_path">Path (local or remote GeoIP data)</string>
+    <string name="field_update_interval">Remote update interval</string>
+    <string name="field_upstream">Use upstream</string>
+    <string name="rule_source_hint">rules/example.txt or https://…</string>
+    <string name="geosite_rule_hint">gfw,google,bing</string>
+    <string name="geosite_path_hint">geosite.dat or https://…/geosite.dat</string>
+    <string name="geoip_rule_hint">cn,private</string>
+    <string name="geoip_path_hint">geoip.dat or https://…/geoip.dat</string>
+    <string name="update_interval_hint">24h</string>
+    <string name="choose_rule_file">Choose file</string>
+    <string name="choose_host_file">Choose hosts file</string>
+    <string name="host_source_hint">hosts/local.txt or https://…</string>
+    <string name="rule_type_local">Local</string>
+    <string name="rule_type_remote">Remote</string>
+    <string name="rule_type_geosite">Geosite</string>
+    <string name="rule_type_geoip">GeoIP</string>
+    <string name="rule_type_base">Exact domain</string>
+    <string name="rule_type_suffix">Domain suffix</string>
+    <string name="rule_type_pan">Wildcard</string>
+    <string name="rule_type_regex">Regular expression</string>
+    <string name="status_rule_imported_title">RULE IMPORTED</string>
+    <string name="status_rule_imported_message">The selected file was copied into this profile.</string>
+    <string name="status_rule_import_failed">The selected rule file could not be imported.</string>
+
+    <string name="routing_all_title">All apps</string>
+    <string name="routing_all_detail">All apps enter the built-in tunnel except TcpRoute2</string>
+    <string name="routing_selected_title">Selected only</string>
+    <string name="routing_selected_detail">Only checked apps enter the built-in tunnel</string>
+    <string name="routing_bypass_title">Bypass selected</string>
+    <string name="routing_bypass_detail">Checked apps stay outside the built-in tunnel</string>
+    <string name="routing_option_format" translatable="false">%1$s  ·  %2$s</string>
+    <string name="no_matching_apps">No matching apps</string>
+    <string name="routing_all_summary">All device apps enter the built-in tunnel. TcpRoute2 itself is always bypassed.</string>
+    <string name="routing_socks_summary">SOCKS mode is active. App selection is controlled by the SOCKS client or Proxifier.</string>
+    <plurals name="routing_allowlist_summary">
+        <item quantity="one">%1$d app selected to enter the built-in tunnel.</item>
+        <item quantity="other">%1$d apps selected to enter the built-in tunnel.</item>
+    </plurals>
+    <plurals name="routing_blocklist_summary">
+        <item quantity="one">%1$d app selected to stay outside the built-in tunnel.</item>
+        <item quantity="other">%1$d apps selected to stay outside the built-in tunnel.</item>
+    </plurals>
+
+    <string name="notification_socks_ready">SOCKS ready for Proxifier</string>
+    <string name="notification_vpn_running">VPN running through TcpRoute2</string>
+    <string name="notification_channel_name">TcpRoute2 connection</string>
+    <string name="system_proxy">VPN network proxy</string>
+    <string name="wifi_proxy">Wi-Fi proxy settings</string>
+    <string name="wifi_proxy_endpoint">HTTP proxy host: %1$s\nPort: %2$d</string>
+    <string name="copy_proxy_host">Copy host</string>
+    <string name="open_wifi_settings">Open Wi-Fi settings</string>
+    <string name="system_proxy_vpn_unsupported">VPN network proxy requires Android 10 or later.</string>
+</resources>

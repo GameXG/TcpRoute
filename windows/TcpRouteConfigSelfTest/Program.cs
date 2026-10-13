@@ -1,0 +1,14 @@
+namespace TcpRouteTray;
+
+internal static class Program
+{
+    private static void Main(string[] args)
+    {
+        ConfigCodecSelfTest.Run();
+        GeoDataManagerSelfTest.Run();
+        WintunDependenciesSelfTest.Run();
+        TrayConfigurationSelfTest.Run();
+        foreach (var artifact in args) ArtifactSelfTest.Run(artifact);
+        Console.WriteLine("All Windows config self-tests passed.");
+    }
+}

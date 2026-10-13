@@ -1,4 +1,5 @@
 package netchan
+
 import (
 	"testing"
 )
@@ -17,4 +18,3 @@ func Test1(t *testing.T) {
 		t.Fatal("dns")
 	}
 }
-

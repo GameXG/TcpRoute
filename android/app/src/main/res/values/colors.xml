@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ink">#152235</color>
+    <color name="ink_muted">#65758B</color>
+    <color name="ink_faint">#91A0B3</color>
+    <color name="navy">#13243A</color>
+    <color name="teal">#19B69B</color>
+    <color name="teal_pressed">#10947E</color>
+    <color name="teal_soft">#E5F7F3</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_subtle">#F6F8FB</color>
+    <color name="page">#EFF3F8</color>
+    <color name="stroke">#D9E1EB</color>
+    <color name="danger">#D95D61</color>
+    <color name="danger_soft">#FFF0F0</color>
+    <color name="white_72">#B8FFFFFF</color>
+    <color name="white_10">#1AFFFFFF</color>
+    <color name="launcher_background">#13243A</color>
+</resources>

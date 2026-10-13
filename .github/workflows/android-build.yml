@@ -1,0 +1,73 @@
+name: Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/android-build.yml"
+      - "android/**"
+      - "scripts/build-android-tcproute.sh"
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: "github.com/GameXG/*"
+      GONOSUMDB: "github.com/GameXG/*"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Configure private Go module access
+        env:
+          PROXYCLIENT_DEPLOY_KEY: ${{ secrets.PROXYCLIENT_DEPLOY_KEY }}
+        run: |
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$PROXYCLIENT_DEPLOY_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          ssh-keyscan -H github.com >> "$HOME/.ssh/known_hosts"
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+      - name: Install Android NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358"
+
+      - name: Build TcpRoute2 Android binaries
+        run: bash scripts/build-android-tcproute.sh
+
+      - name: Fetch geosite data
+        run: bash scripts/fetch-geosite.sh
+
+      - name: Generate Gradle wrapper
+        working-directory: android
+        run: gradle wrapper --gradle-version 8.10.2 --distribution-type bin
+
+      - name: Prepare native binaries
+        run: bash android/prepare-native-binaries.sh
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Collect debug APK
+        run: |
+          mkdir -p .build/android
+          cp android/app/build/outputs/apk/debug/app-debug.apk .build/android/TcpRoute2-debug-android-arm64.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tcproute-android-artifacts
+          path: .build/android/**

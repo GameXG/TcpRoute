@@ -1,0 +1,416 @@
+<Window x:Class="TcpRouteTray.MainWindow" x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TcpRoute2" Icon="/Assets/TcpRoute2.ico" Width="1280" Height="820" MinWidth="1040" MinHeight="680"
+        WindowStartupLocation="CenterScreen" Background="Transparent"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14">
+    <Window.Resources>
+        <SolidColorBrush x:Key="WindowBrush" Color="#151821"/>
+        <SolidColorBrush x:Key="NavBrush" Color="#1B1F2A"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#202531"/>
+        <SolidColorBrush x:Key="RaisedBrush" Color="#282E3B"/>
+        <SolidColorBrush x:Key="HoverBrush" Color="#323949"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#394153"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#F2F4F8"/>
+        <SolidColorBrush x:Key="MutedBrush" Color="#9CA6B7"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#48C8D8"/>
+        <SolidColorBrush x:Key="BlueBrush" Color="#7487FF"/>
+        <SolidColorBrush x:Key="GoodBrush" Color="#31D17C"/>
+        <SolidColorBrush x:Key="WarningBrush" Color="#F5B942"/>
+        <SolidColorBrush x:Key="DangerBrush" Color="#FF6678"/>
+        <SolidColorBrush x:Key="InputBrush" Color="#E6171B24"/>
+        <SolidColorBrush x:Key="ToolTipBrush" Color="#F0303746"/>
+        <SolidColorBrush x:Key="AlternateBrush" Color="#D9232936"/>
+        <SolidColorBrush x:Key="HeaderBrush" Color="#E62B3240"/>
+        <SolidColorBrush x:Key="SelectionBrush" Color="#E6354052"/>
+        <SolidColorBrush x:Key="GridLineBrush" Color="#59343B4B"/>
+        <SolidColorBrush x:Key="InfoBrush" Color="#D919212A"/>
+        <SolidColorBrush x:Key="InfoBorderBrush" Color="#8031505A"/>
+        <SolidColorBrush x:Key="InfoTextBrush" Color="#FF9CCBD2"/>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="{DynamicResource ToolTipBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Padding" Value="8,5"/>
+        </Style>
+        <Style x:Key="ButtonBase" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0.5"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Border" Property="Background" Value="{DynamicResource HoverBrush}"/></Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Border" Property="BorderThickness" Value="2"/></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="#10151B"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
+            <Setter Property="Background" Value="#382630"/>
+            <Setter Property="BorderBrush" Value="#714050"/>
+            <Setter Property="Foreground" Value="#FF9BA8"/>
+        </Style>
+        <Style x:Key="NavButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="14,11"/>
+            <Setter Property="Margin" Value="10,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="NavBorder" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource HoverBrush}"/></Trigger>
+                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource SelectionBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter TargetName="NavBorder" Property="BorderThickness" Value="1"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#151821"/>
+            <Setter Property="Background" Value="#E8ECF3"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="MinHeight" Value="34"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource GridLineBrush}"/>
+            <Setter Property="RowBackground" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource AlternateBrush}"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="RowHeaderWidth" Value="0"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+        </Style>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource HeaderBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Padding" Value="10,9"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="9,7"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}" Margin="0,0,6,8">
+                            <ContentPresenter ContentSource="Header"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource SelectionBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PanelBorder" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,18"/>
+        </Style>
+        <Style x:Key="Eyebrow" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid" Background="{DynamicResource WindowBrush}">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{DynamicResource NavBrush}">
+            <Grid Margin="0,18,0,16">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <StackPanel Margin="24,0,18,20">
+                    <TextBlock Text="TcpRoute2" FontSize="22" FontWeight="SemiBold"/>
+                    <TextBlock Text="ROUTING CONSOLE" Foreground="{DynamicResource AccentBrush}" FontSize="10" FontWeight="Bold" Margin="0,3,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1">
+                    <RadioButton x:Name="OverviewNav" Style="{StaticResource NavButton}" IsChecked="True" Checked="NavigationChanged" Tag="Overview">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE80F;" FontSize="17" Width="32"/><TextBlock Text="概览"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" Checked="NavigationChanged" Tag="Upstreams">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE968;" FontSize="17" Width="32"/><TextBlock Text="上游"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" Checked="NavigationChanged" Tag="Routing">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE8F1;" FontSize="17" Width="32"/><TextBlock Text="分流"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" Checked="NavigationChanged" Tag="Hosts">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE774;" FontSize="17" Width="32"/><TextBlock Text="Host 来源"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" Checked="NavigationChanged" Tag="Activity">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE9D9;" FontSize="17" Width="32"/><TextBlock Text="活动"/></StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource NavButton}" Checked="NavigationChanged" Tag="Settings">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE713;" FontSize="17" Width="32"/><TextBlock Text="设置"/></StackPanel>
+                    </RadioButton>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Margin="18,0">
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="5" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="当前状态" Style="{StaticResource Eyebrow}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Ellipse x:Name="NavStatusDot" Width="9" Height="9" Fill="{DynamicResource MutedBrush}" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="NavStatusText" Text="已停止"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions><RowDefinition Height="70"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Border Grid.Row="0" Padding="26,14">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <ComboBox x:Name="ProfilePicker" Width="190" DisplayMemberPath="Name" SelectionChanged="ProfileSelectionChanged" ToolTip="选择配置"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="14,0,0,0" VerticalAlignment="Center">
+                        <Ellipse x:Name="DraftDot" Width="8" Height="8" Fill="{DynamicResource GoodBrush}" Margin="0,0,7,0"/>
+                        <TextBlock x:Name="DraftStatus" Text="已保存" Foreground="{DynamicResource MutedBrush}"/>
+                    </StackPanel>
+                    <CheckBox x:Name="SystemProxyToggle" Grid.Column="2" Content="系统代理" Margin="12,0" Checked="SystemProxyChanged" Unchecked="SystemProxyChanged"/>
+                    <Button x:Name="SaveButton" Grid.Column="3" Style="{StaticResource ButtonBase}" Click="SaveConfiguration" Margin="4,0" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE74E;" Margin="0,0,7,0"/><TextBlock Text="保存配置"/></StackPanel>
+                    </Button>
+                    <Button x:Name="RunButton" Grid.Column="4" Style="{StaticResource PrimaryButton}" Click="ToggleRuntime" Margin="4,0" MinWidth="112">
+                        <StackPanel Orientation="Horizontal"><TextBlock x:Name="RunIcon" FontFamily="Segoe Fluent Icons" Text="&#xE768;" Margin="0,0,7,0"/><TextBlock x:Name="RunText" Text="启动"/></StackPanel>
+                    </Button>
+                    <Button Grid.Column="5" Style="{StaticResource ButtonBase}" Click="OpenToolsMenu" Margin="4,0,0,0" Width="40" Padding="0" ToolTip="配置工具">
+                        <TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE712;" FontSize="18"/>
+                        <Button.ContextMenu>
+                            <ContextMenu x:Name="ToolsMenu">
+                                <MenuItem Header="新建配置…" Click="NewConfiguration"/>
+                                <MenuItem Header="放弃草稿并重新载入" Click="ReloadConfiguration"/>
+                                <Separator/>
+                                <MenuItem Header="导入文件…" Click="ImportConfigFile"/>
+                                <MenuItem Header="导入 URL…" Click="ImportConfigUrl"/>
+                                <MenuItem Header="导出已保存配置…" Click="ExportSavedConfig"/>
+                                <Separator/>
+                                <MenuItem Header="Advanced TOML…" Click="OpenAdvancedToml"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="28,24,28,18">
+                <Grid x:Name="OverviewPage">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,18">
+                                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="概览" Style="{StaticResource SectionTitle}" Margin="0"/>
+                                <TextBlock x:Name="NetworkModeTitle" Grid.Column="1" Text="网络模式" VerticalAlignment="Center" Margin="12,0"/>
+                                <ComboBox x:Name="NetworkModePicker" Grid.Column="2" Width="210" ItemsSource="{Binding NetworkModeOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectionChanged="NetworkModeChanged"/>
+                            </Grid>
+                            <Grid x:Name="OutboundInterfaceRow" Margin="0,0,0,18" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="300"/></Grid.ColumnDefinitions>
+                                <TextBlock x:Name="OutboundInterfaceTitle" Text="出口网络接口" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="OutboundInterfacePicker" Grid.Column="1" ItemsSource="{Binding OutboundInterfaceOptions}" SelectedValuePath="Value" SelectionChanged="OutboundInterfaceChanged" DropDownOpened="OutboundInterfaceDropDownOpened">
+                                    <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" ToolTip="{Binding Label}" TextTrimming="CharacterEllipsis" MaxWidth="275"/></DataTemplate></ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </Grid>
+                            <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,18">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse x:Name="HeroStatusDot" Width="12" Height="12" Fill="{DynamicResource MutedBrush}" Margin="0,6,10,0" VerticalAlignment="Top"/>
+                                            <StackPanel>
+                                                <TextBlock x:Name="HeroStatus" Text="TcpRoute2 已停止" FontSize="27" FontWeight="SemiBold"/>
+                                                <TextBlock x:Name="HeroEndpoint" Text="SOCKS5 服务未运行" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource ButtonBase}" Click="RunConnectivityTest" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE9D2;" Margin="0,0,7,0"/><TextBlock Text="连通性检查"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <Grid Margin="0,0,0,18">
+                                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource PanelBorder}" Margin="0,0,10,0">
+                                    <StackPanel><TextBlock Text="当前配置" Style="{StaticResource Eyebrow}"/><TextBlock x:Name="OverviewProfile" Text="default" FontSize="22" FontWeight="SemiBold" Margin="0,10,0,3"/><TextBlock Text="显式保存的运行配置" Foreground="{DynamicResource MutedBrush}"/></StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource PanelBorder}" Margin="5,0">
+                                    <StackPanel><TextBlock Text="Windows 代理" Style="{StaticResource Eyebrow}"/><TextBlock x:Name="OverviewProxy" Text="未启用" FontSize="22" FontWeight="SemiBold" Margin="0,10,0,3"/><TextBlock Text="当前用户 SOCKS 设置" Foreground="{DynamicResource MutedBrush}"/></StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Margin="10,0,0,0">
+                                    <StackPanel><TextBlock Text="LAN 客户端" Style="{StaticResource Eyebrow}"/><TextBlock x:Name="OverviewLan" Text="未开放" FontSize="22" FontWeight="SemiBold" Margin="0,10,0,3"/><TextBlock Text="默认仅监听本机" Foreground="{DynamicResource MutedBrush}"/></StackPanel>
+                                </Border>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="1.15*"/><ColumnDefinition Width="0.85*"/></Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Style="{StaticResource PanelBorder}" Margin="0,0,10,0">
+                                    <StackPanel>
+                                        <TextBlock Text="运行信息" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <TextBlock Text="核心进程" Foreground="{DynamicResource MutedBrush}"/><TextBlock x:Name="CoreHealth" Grid.Column="1" Text="等待启动" HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Row="1" Text="上游数量" Foreground="{DynamicResource MutedBrush}" Margin="0,13,0,0"/><TextBlock x:Name="UpstreamCount" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,13,0,0" HorizontalAlignment="Right"/>
+                                            <TextBlock Grid.Row="2" Text="Host 来源" Foreground="{DynamicResource MutedBrush}" Margin="0,13,0,0"/><TextBlock x:Name="HostCount" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,13,0,0" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource PanelBorder}" Margin="10,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="最近事件" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,14"/>
+                                        <TextBlock x:Name="RecentEvent" Text="TcpRoute2 已就绪" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TestResult" Text="尚未执行连通性检查" Foreground="{DynamicResource MutedBrush}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <Grid x:Name="UpstreamsPage" Visibility="Collapsed">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <TextBlock Text="上游" Style="{StaticResource SectionTitle}" Margin="0"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <ComboBox x:Name="NewProxyType" Width="150" ItemsSource="{Binding CreatableProxyTypes}" SelectedIndex="0"/>
+                            <Button Style="{StaticResource PrimaryButton}" Click="AddProxy" Margin="8,0,0,0"><StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE710;" Margin="0,0,7,0"/><TextBlock Text="添加代理"/></StackPanel></Button>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="360"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource PanelBorder}" Padding="0">
+                            <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <Border Padding="18,15"><TextBlock Text="代理节点" FontWeight="SemiBold"/></Border>
+                                <ListBox x:Name="UpstreamList" Grid.Row="1" Background="Transparent" BorderThickness="0" SelectionChanged="UpstreamSelectionChanged">
+                                    <ListBox.ItemTemplate><DataTemplate><Grid Margin="8"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding ProxyUrl}" Foreground="{DynamicResource MutedBrush}" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="245"/></StackPanel><TextBlock Grid.Column="1" Text="已配置" Foreground="{DynamicResource GoodBrush}" VerticalAlignment="Center"/></Grid></DataTemplate></ListBox.ItemTemplate>
+                                </ListBox>
+                                <Button Grid.Row="2" Style="{StaticResource DangerButton}" Click="RemoveProxy" Margin="14"><StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE74D;" Margin="0,0,7,0"/><TextBlock Text="移除所选代理"/></StackPanel></Button>
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource PanelBorder}">
+                            <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                <TextBlock Text="节点详情" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,20"/>
+                                <Grid Grid.Row="1" Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="18"/><ColumnDefinition/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="名称" Style="{StaticResource FieldLabel}"/><TextBox x:Name="UpstreamName" TextChanged="DraftFieldChanged"/></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="DNS Resolve" Style="{StaticResource FieldLabel}"/><CheckBox x:Name="UpstreamDns" ToolTip="开启：命中 hosts 时只使用其地址，未命中才查询 DNS。关闭：将域名交给上游代理解析。" Checked="DraftFieldChanged" Unchecked="DraftFieldChanged" Margin="0,9,0,0"><TextBlock Text="本地解析目标域名" TextWrapping="Wrap"/></CheckBox></StackPanel></Grid>
+                                <StackPanel Grid.Row="2" Margin="0,0,0,14"><TextBlock Text="完整代理 URL" Style="{StaticResource FieldLabel}"/><TextBox x:Name="UpstreamUrl" TextChanged="DraftFieldChanged"/><TextBlock x:Name="ProxyValidation" Foreground="{DynamicResource MutedBrush}" Margin="0,7,0,0" TextWrapping="Wrap"/></StackPanel>
+                                <Grid Grid.Row="3" Margin="0,0,0,16"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="14"/><ColumnDefinition/><ColumnDefinition Width="14"/><ColumnDefinition/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Credit" Style="{StaticResource FieldLabel}"/><TextBox x:Name="UpstreamCredit" TextChanged="DraftFieldChanged"/></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="Sleep" Style="{StaticResource FieldLabel}"/><TextBox x:Name="UpstreamSleep" TextChanged="DraftFieldChanged"/></StackPanel><StackPanel Grid.Column="4"><TextBlock Text="CorrectDelay" Style="{StaticResource FieldLabel}"/><TextBox x:Name="UpstreamCorrect" TextChanged="DraftFieldChanged"/></StackPanel></Grid>
+                                <Border Grid.Row="4" Background="{DynamicResource InfoBrush}" BorderBrush="{DynamicResource InfoBorderBrush}" BorderThickness="0.5" CornerRadius="5" Padding="14"><TextBlock Text="Direct 是内置上游，不会出现在这里。可在分流页为 Direct 配置规则。" Foreground="{DynamicResource InfoTextBrush}" TextWrapping="Wrap"/></Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <Grid x:Name="RoutingPage" Visibility="Collapsed">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <TextBlock Text="分流" Style="{StaticResource SectionTitle}"/>
+                    <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="260"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource PanelBorder}" Padding="0"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Border Padding="18,15"><TextBlock Text="选择上游" FontWeight="SemiBold"/></Border><ListBox x:Name="RoutingUpstreamList" Grid.Row="1" Background="Transparent" BorderThickness="0" DisplayMemberPath="Name" SelectionChanged="RoutingUpstreamChanged"/></Grid></Border>
+                        <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Padding="16">
+                            <TabControl x:Name="RuleTabs">
+                                <TabItem Header="优先规则（Whitelist）"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Button Style="{StaticResource ButtonBase}" Click="AddWhitelistLocal" Content="本地文件"/><Button Style="{StaticResource ButtonBase}" Click="AddWhitelistRemote" Content="远程文件" Margin="7,0"/><Button Style="{StaticResource ButtonBase}" Click="AddWhitelistGeosite" Content="Geosite"/><Button Style="{StaticResource ButtonBase}" Click="AddWhitelistGeoIP" Content="GeoIP" Margin="7,0,0,0"/><Button Style="{StaticResource ButtonBase}" Click="ChooseWhitelistFile" Content="选择文件…" Margin="7,0"/><Button Style="{StaticResource DangerButton}" Click="RemoveWhitelist" Content="移除"/></StackPanel><DataGrid x:Name="WhitelistGrid" Grid.Row="1" CellEditEnding="RuleGridEdited"><DataGrid.Columns><DataGridTextColumn Header="来源" Binding="{Binding Source}" IsReadOnly="True" Width="90"/><DataGridTextColumn Header="匹配 / Geo 名称" Binding="{Binding Type}" Width="170"/><DataGridTextColumn Header="Path" Binding="{Binding QuickPath}" Width="*"/><DataGridTextColumn Header="更新周期" Binding="{Binding QuickUpdateInterval}" Width="110"/></DataGrid.Columns></DataGrid></Grid></TabItem>
+                                <TabItem Header="排除规则（Blacklist）"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Button Style="{StaticResource ButtonBase}" Click="AddBlacklistLocal" Content="本地文件"/><Button Style="{StaticResource ButtonBase}" Click="AddBlacklistRemote" Content="远程文件" Margin="7,0"/><Button Style="{StaticResource ButtonBase}" Click="AddBlacklistGeosite" Content="Geosite"/><Button Style="{StaticResource ButtonBase}" Click="AddBlacklistGeoIP" Content="GeoIP" Margin="7,0,0,0"/><Button Style="{StaticResource ButtonBase}" Click="ChooseBlacklistFile" Content="选择文件…" Margin="7,0"/><Button Style="{StaticResource DangerButton}" Click="RemoveBlacklist" Content="移除"/></StackPanel><DataGrid x:Name="BlacklistGrid" Grid.Row="1" CellEditEnding="RuleGridEdited"><DataGrid.Columns><DataGridTextColumn Header="来源" Binding="{Binding Source}" IsReadOnly="True" Width="90"/><DataGridTextColumn Header="匹配 / Geo 名称" Binding="{Binding Type}" Width="170"/><DataGridTextColumn Header="Path" Binding="{Binding QuickPath}" Width="*"/><DataGridTextColumn Header="更新周期" Binding="{Binding QuickUpdateInterval}" Width="110"/></DataGrid.Columns></DataGrid></Grid></TabItem>
+                            </TabControl>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <Grid x:Name="HostsPage" Visibility="Collapsed">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <TextBlock Text="Host 来源" Style="{StaticResource SectionTitle}"/>
+                    <Grid Grid.Row="1" Margin="0,0,0,12"><TextBlock Text="本地解析时，hosts 命中覆盖 DNS。" Foreground="{DynamicResource MutedBrush}"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Style="{StaticResource ButtonBase}" Click="AddLocalHost" Content="添加本地来源"/><Button Style="{StaticResource ButtonBase}" Click="AddRemoteHost" Content="添加远程来源" Margin="8,0"/><Button Style="{StaticResource DangerButton}" Click="RemoveHost" Content="移除"/></StackPanel></Grid>
+                    <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="0"><DataGrid x:Name="HostsGrid" CellEditEnding="HostGridEdited"><DataGrid.Columns><DataGridTextColumn Header="来源" Binding="{Binding Source}" IsReadOnly="True" Width="90"/><DataGridComboBoxColumn Header="匹配" SelectedItemBinding="{Binding Type}" Width="110"/><DataGridTextColumn Header="Credit" Binding="{Binding Credit}" Width="90"/><DataGridTextColumn Header="Path" Binding="{Binding Path}" Width="*"/><DataGridTextColumn Header="更新周期" Binding="{Binding UpdateInterval}" Width="120"/></DataGrid.Columns></DataGrid></Border>
+                </Grid>
+
+                <Grid x:Name="ActivityPage" Visibility="Collapsed">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <TextBlock Text="活动" Style="{StaticResource SectionTitle}"/>
+                    <Grid Grid.Row="1" Margin="0,0,0,12"><TextBlock Text="显示 TcpRoute2 核心最近输出，不会修改日志文件。" Foreground="{DynamicResource MutedBrush}"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Style="{StaticResource ButtonBase}" Click="RefreshActivity"><StackPanel Orientation="Horizontal"><TextBlock FontFamily="Segoe Fluent Icons" Text="&#xE72C;" Margin="0,0,7,0"/><TextBlock Text="刷新"/></StackPanel></Button><Button Style="{StaticResource ButtonBase}" Click="OpenLogFolder" Content="导出日志" Margin="8,0,0,0"/></StackPanel></Grid>
+                    <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="0"><TextBox x:Name="ActivityLog" IsReadOnly="True" FontFamily="Cascadia Mono, Consolas" FontSize="13" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" BorderThickness="0" Padding="16"/></Border>
+                </Grid>
+
+                <Grid x:Name="SettingsPage" Visibility="Collapsed">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
+                        <TextBlock Text="设置" Style="{StaticResource SectionTitle}"/>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="外观" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="默认跟随 Windows；Windows 11 使用系统 Mica 背景。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><ComboBox x:Name="AppearancePicker" Grid.Column="1" Width="170" ItemsSource="{Binding AppearanceOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectionChanged="AppearanceChanged"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="语言" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="默认按 Windows 显示语言自动选择。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><ComboBox x:Name="LanguagePicker" Grid.Column="1" Width="170" ItemsSource="{Binding LanguageOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectionChanged="LanguageChanged"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock x:Name="GeoDataTitle" Text="Geo 数据" FontSize="16" FontWeight="SemiBold"/><TextBlock x:Name="GeoDataStatus" Text="正在读取数据状态…" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0" TextWrapping="Wrap"/></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"><ComboBox x:Name="GeoDataIntervalPicker" Width="110" ItemsSource="{Binding GeoDataIntervalOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectionChanged="GeoDataIntervalChanged"/><Button x:Name="GeoDataUpdateButton" Style="{StaticResource ButtonBase}" Click="UpdateGeoData" Content="立即更新" Margin="8,0,0,0"/></StackPanel></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="允许 LAN 客户端" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="运行时将监听地址改写为 0.0.0.0；配置文件本身保持不变。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><CheckBox x:Name="AllowLanToggle" Grid.Column="1" Content="启用" Checked="AllowLanChanged" Unchecked="AllowLanChanged"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="允许 STUN" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="允许 STUN 数据和常用发现端口；默认关闭。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><CheckBox x:Name="AllowStunToggle" Grid.Column="1" Content="启用" Checked="NetworkFeatureChanged" Unchecked="NetworkFeatureChanged"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="允许 QUIC" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="允许 QUIC 使用 UDP 443；默认关闭。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><CheckBox x:Name="AllowQuicToggle" Grid.Column="1" Content="启用" Checked="NetworkFeatureChanged" Unchecked="NetworkFeatureChanged"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="启用 IPv6" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="允许本地可识别的 IPv6 目标和 DNS 候选；默认关闭。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><CheckBox x:Name="EnableIpv6Toggle" Grid.Column="1" Content="启用" Checked="NetworkFeatureChanged" Unchecked="NetworkFeatureChanged"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="TcpRoute2 核心程序" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="自动查找失败时，可手动指定 TcpRoute2.exe。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><Button Grid.Column="1" Style="{StaticResource ButtonBase}" Click="LocateExecutable" Content="选择程序…"/></Grid></Border>
+                        <Border Style="{StaticResource PanelBorder}" Margin="0,0,0,14"><Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="配置与高级编辑" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="Quick UI 保留已有监听端口但不提供编辑；需要修改完整语义时使用 Advanced TOML。" Foreground="{DynamicResource MutedBrush}" Margin="0,5,0,0"/></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Style="{StaticResource ButtonBase}" Click="OpenConfigFolder" Content="配置目录"/><Button Style="{StaticResource ButtonBase}" Click="OpenAdvancedToml" Content="Advanced TOML" Margin="8,0,0,0"/></StackPanel></Grid></Border>
+                    </StackPanel></ScrollViewer>
+                </Grid>
+            </Grid>
+
+        </Grid>
+    </Grid>
+</Window>

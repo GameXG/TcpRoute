@@ -5,14 +5,7 @@ go:
   - tip
 
 before_deploy:
-  - GOARCH=arm GOOS=linux   go build -o TcpRoute2-linux-arm
-  - GOARCH=386 GOOS=linux   go build -o TcpRoute2-linux-386
-  - GOARCH=386 GOOS=freebsd   go build -o TcpRoute2-freebsd-386
-  - GOARCH=386 GOOS=darwin  go build -o TcpRoute2-darwin-386
-  - GOARCH=386 GOOS=windows go build -o TcpRoute2-windows-386.exe
-  - GOARCH=amd64 GOOS=linux   go build -o TcpRoute2-linux-amd64
-  - GOARCH=amd64 GOOS=freebsd   go build -o TcpRoute2-freebsd-amd64
-  - GOARCH=amd64 GOOS=darwin  go build -o TcpRoute2-darwin-amd64
+  - bash scripts/fetch-geosite.sh
   - GOARCH=amd64 GOOS=windows go build -o TcpRoute2-windows-amd64.exe
 
 deploy:
@@ -20,15 +13,8 @@ deploy:
   api_key: $CI_USER_TOKEN
   skip_cleanup: true
   file:
-    - TcpRoute2-linux-arm
-    - TcpRoute2-linux-386
-    - TcpRoute2-freebsd-386
-    - TcpRoute2-darwin-386
-    - TcpRoute2-windows-386.exe
-    - TcpRoute2-linux-amd64
-    - TcpRoute2-freebsd-amd64
-    - TcpRoute2-darwin-amd64
     - TcpRoute2-windows-amd64.exe
+    - assets/geosite.dat
   on:
     tags: true
     all_branches: true

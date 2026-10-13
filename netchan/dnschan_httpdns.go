@@ -1,11 +1,12 @@
 package netchan
+
 import (
-	"time"
-	"net/url"
-	"net/http"
-	"github.com/golang/glog"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"github.com/golang/glog"
+	"net/http"
+	"net/url"
+	"time"
 )
 
 type httpDNS struct {
@@ -13,7 +14,6 @@ type httpDNS struct {
 	url       url.URL
 	url_query url.Values
 }
-
 
 type HttpQueryRes struct {
 	Domain  string
@@ -34,7 +34,7 @@ func NewHttpDns(u string) (*httpDNS, error) {
 	hd.surl = u
 	_url, err := url.Parse(u)
 	if err != nil {
-		return nil, fmt.Errorf("url 解析错误：", err)
+		return nil, fmt.Errorf("url 解析错误：%v", err)
 	}
 	hd.url = *_url
 	hd.url_query = _url.Query()
@@ -42,12 +42,11 @@ func NewHttpDns(u string) (*httpDNS, error) {
 	return &hd, nil
 }
 
-
 // 执行dns查询(阻塞)
 // 查询结果会通过 RecordChan 返回，注意可能被阻塞。
 // 在需要提前结束时 ExitChan 会被关闭
 // 注意：实现者需要处理 RecordChan 被关闭的情况。
-func (hd*httpDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan int) {
+func (hd *httpDNS) query(domain string, RecordChan chan *DnsRecord, ExitChan chan int) {
 
 	select {
 	case <-ExitChan:
@@ -62,7 +61,7 @@ func (hd*httpDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan 
 
 	resp, err := http.Get(newUrl.String())
 	if err != nil {
-		glog.Warning(fmt.Sprintf("httpDns query %v err:", domain, err))
+		glog.Warning(fmt.Sprintf("httpDns query %v err: %v", domain, err))
 		return
 	}
 
@@ -73,7 +72,7 @@ func (hd*httpDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan 
 	dec := json.NewDecoder(resp.Body)
 
 	if err := dec.Decode(&dnsRes); err != nil {
-		glog.Warning(fmt.Sprintf("httpDns query %v err:", domain, err))
+		glog.Warning(fmt.Sprintf("httpDns query %v err: %v", domain, err))
 		return
 	}
 
@@ -83,7 +82,7 @@ func (hd*httpDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan 
 	default:
 		for _, ip := range dnsRes.Ips {
 			func() {
-				defer func() {_ = recover()}()
+				defer func() { _ = recover() }()
 				RecordChan <- &DnsRecord{ip.Ip, ip.Credit}
 
 			}()
@@ -92,7 +91,6 @@ func (hd*httpDNS)query(domain string, RecordChan chan *DnsRecord, ExitChan chan 
 }
 
 // 执行前的默认等待时间
-func (hd*httpDNS)querySleep() time.Duration {
+func (hd *httpDNS) querySleep() time.Duration {
 	return 0 * time.Millisecond
 }
-

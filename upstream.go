@@ -1,7 +1,8 @@
 package main
+
 import (
-	"time"
 	"net"
+	"time"
 )
 
 /*
@@ -18,17 +19,15 @@ import (
 */
 
 type UpStream interface {
-
 }
 
 // 基本的错误报告实现
 type UpStreamErrorReportingBase struct {
 	errConnServer                *ErrConnService
 	DailName, DomainAddr, IpAddr string
-
 }
 
-func (er*UpStreamErrorReportingBase) Report(t ErrConnType) {
+func (er *UpStreamErrorReportingBase) Report(t ErrConnType) {
 	er.errConnServer.AddErrLog(er.DailName, er.DomainAddr, er.IpAddr, t)
 }
 
@@ -39,12 +38,8 @@ type UpStreamErrorReporting interface {
 	Report(t ErrConnType)
 }
 
-
 type UpStreamDial interface {
 	// 建立新连接
 	// 如果没有实现 UpStreamErrorReporting 可以返回 nil
 	DialTimeout(network, address string, timeout time.Duration) (net.Conn, UpStreamErrorReporting, error)
-
-
-
 }

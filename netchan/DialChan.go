@@ -1,24 +1,22 @@
 package netchan
+
 import (
-	"time"
-	"net"
 	"fmt"
-	"sync/atomic"
+	"net"
 	"strconv"
 	"sync"
+	"sync/atomic"
+	"time"
 )
-
 
 const LocalConnGoCount = 5 // 本地连接时使用的线程数（只对dns解析结果生效）
 
-
 type ConnRes struct {
-
 	Dial       DialTimeouter
 	Conn       net.Conn
 	Ping       time.Duration // 连接耗时
 	DomainAddr string
-	IpAddr     string        //当使用DNS解析时，保存着 ip:端口 格式的地址
+	IpAddr     string //当使用DNS解析时，保存着 ip:端口 格式的地址
 	UserData   interface{}
 }
 
@@ -32,7 +30,6 @@ type DialTimeouter interface {
 可以通过选项指定是否本地dns解析，使用本地解析时会同时使用获得的多个ip连接，同样通过 chan 返回所有建立的连接。
 
 filter 过滤器，确定是否使用dns解析得到的ip
-
 */
 func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, exitChan chan int, dnsResolve bool, userData interface{}, filter DialFilterer, network, address string, timeout time.Duration) (err error) {
 	if filter == nil {
@@ -46,7 +43,7 @@ func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, 
 
 	// 安全结束本次连接，可以多次调用
 	mySafeExit := func() {
-		defer func() {_ = recover()}()
+		defer func() { _ = recover() }()
 		close(myExitChan)
 	}
 
@@ -66,7 +63,6 @@ func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, 
 		mySafeExit()
 	}()
 
-
 	select {
 	case <-myExitChan:
 		return nil
@@ -82,7 +78,7 @@ func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, 
 	}
 	portInt, err := strconv.Atoi(prot)
 	if err != nil || portInt < 0 {
-		return fmt.Errorf("端口错误：", portInt)
+		return fmt.Errorf("端口错误：%v", portInt)
 	}
 	ip := net.ParseIP(host)
 
@@ -98,15 +94,15 @@ func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, 
 		c, err := dial.DialTimeout(network, address, timeout)
 		if err != nil {
 			return err
-		}else {
+		} else {
 			// 使用匿名函数包装的原因是 connChan 可能已经关闭
 			func() {
-				defer func() {_ = recover()}()
+				defer func() { _ = recover() }()
 				connChan <- ConnRes{dial, c, time.Now().Sub(n), address, address, userData}
 			}()
 			return nil
 		}
-	}else {
+	} else {
 		// 针对线路执行安全检查，通过后下面还有针对 ip 进行的安全检查
 		if filter.DialFilter(network, host, "", portInt, dialCredit, dialCredit) == false {
 			return nil
@@ -117,7 +113,7 @@ func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, 
 
 		// 退出时及被要求终止时停止dns解析
 		go func() {
-			defer func() {_ = recover()}()
+			defer func() { _ = recover() }()
 			<-myExitChan
 			dnsRes.Stop()
 		}()
@@ -162,8 +158,8 @@ func ChanDialTimeout(dial DialTimeouter, dialCredit int, connChan chan ConnRes, 
 					}
 					atomic.AddUint32(&okCount, 1)
 
-					func() {// 使用匿名函数捕获异常，防止 connChan 关闭时崩溃
-						defer func() {_ = recover()}()
+					func() { // 使用匿名函数捕获异常，防止 connChan 关闭时崩溃
+						defer func() { _ = recover() }()
 						connChan <- ConnRes{dial, c, time.Now().Sub(n), address, ipAddr, userData}
 					}()
 				}

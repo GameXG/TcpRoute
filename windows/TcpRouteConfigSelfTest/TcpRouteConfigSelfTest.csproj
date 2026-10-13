@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="ArtifactSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/ConfigurationChangeTracker.cs" Link="ConfigurationChangeTracker.cs" />
+    <Compile Include="../TcpRouteTray/TraySettings.cs" Link="TraySettings.cs" />
+    <Compile Include="../TcpRouteTray/TrayConfigurationSelfTest.cs" Link="TrayConfigurationSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/WintunNetwork.cs" Link="WintunNetwork.cs" />
+    <Compile Include="../TcpRouteTray/WindowsProxy.cs" Link="WindowsProxy.cs" />
+    <Compile Include="../TcpRouteTray/WintunDependencies.cs" Link="WintunDependencies.cs" />
+    <Compile Include="../TcpRouteTray/WintunDependenciesSelfTest.cs" Link="WintunDependenciesSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/TcpRouteConfig.cs" Link="TcpRouteConfig.cs" />
+    <Compile Include="../TcpRouteTray/EditableTcpRouteConfig.cs" Link="EditableTcpRouteConfig.cs" />
+    <Compile Include="../TcpRouteTray/ConfigCodecSelfTest.cs" Link="ConfigCodecSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/NetworkFeaturePolicy.cs" Link="NetworkFeaturePolicy.cs" />
+    <Compile Include="../TcpRouteTray/GeoDataManager.cs" Link="GeoDataManager.cs" />
+    <Compile Include="../TcpRouteTray/GeoDataManagerSelfTest.cs" Link="GeoDataManagerSelfTest.cs" />
+  </ItemGroup>
+</Project>

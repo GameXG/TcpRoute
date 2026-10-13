@@ -2,13 +2,12 @@ package main
 
 import (
 	"bytes"
+	"github.com/GameXG/ProxyClient"
 	"net"
+	"os"
 	"testing"
 	"time"
-	"github.com/gamexg/proxyclient"
-	"os"
 )
-
 
 func TestHttpProxy(t *testing.T) {
 	httpProxy, err := NewHttpServer(":18048")
@@ -50,7 +49,7 @@ func TestHttpProxy(t *testing.T) {
 
 	okChan := make(chan int)
 
-	time.AfterFunc(10 * time.Second, func() { okChan <- 0 })
+	time.AfterFunc(10*time.Second, func() { okChan <- 0 })
 
 	go func() {
 		c, err := l.Accept()
@@ -110,7 +109,7 @@ func TestHttpsProxy(t *testing.T) {
 
 	// 执行连接
 	go func() {
-		p, err := proxyclient.NewHttpProxyClient("https", "127.0.0.1:18043", "proxy.com", true, nil, make(map[string][]string))
+		p, err := proxyclient.NewHttpProxyClient("https", "127.0.0.1:18043", "proxy.com", "", true, nil, make(map[string][]string))
 		if err != nil {
 			panic(err)
 		}
@@ -136,7 +135,7 @@ func TestHttpsProxy(t *testing.T) {
 
 	okChan := make(chan int)
 
-	time.AfterFunc(10 * time.Second, func() {okChan <- 0})
+	time.AfterFunc(10*time.Second, func() { okChan <- 0 })
 
 	go func() {
 		c, err := l.Accept()

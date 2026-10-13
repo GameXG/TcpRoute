@@ -1,15 +1,16 @@
 package main
-import (
 
-	"fmt"
-	"net"
-	"time"
-	"io"
+import (
 	"bytes"
+	"context"
 	"encoding/binary"
-	"strconv"
+	"fmt"
+	"io"
 	"log"
+	"net"
+	"strconv"
 	"sync/atomic"
+	"time"
 )
 
 const forwardBufSize = 8192 // 转发缓冲区大小
@@ -40,28 +41,31 @@ func (sev *hSocksServer) New(conn net.Conn) (h Handler, rePre bool, err error) {
 		fmt.Println(err)
 		fmt.Println(b[:100])
 		return
-	}else {
+	} else {
 		b = b[:n]
+	}
+	if len(b) == 0 {
+		return nil, true, io.EOF
 	}
 
 	//TODO: 可以进行更详细的判断，例如长度，前几个值可能的范围。
 	if b[0] == 0x04 {
 		err = fmt.Errorf("暂时不支持 socks4 协议。")
 		return
-	}else if b[0] == 0x05 {
+	} else if b[0] == 0x05 {
 		return &hSocksHandle{sev, conn}, true, nil
-	}else {
+	} else {
 		err = NoHandleError("协议头不正确。")
 		return
 	}
 }
 
-func (h *hSocksHandle)String() string {
+func (h *hSocksHandle) String() string {
 	return "Socks5"
 }
 
 // 实际处理 Socks 协议
-func (h*hSocksHandle)Handle() error {
+func (h *hSocksHandle) Handle() error {
 	// 鉴定 + 接受 CMD 的总允许时间
 	h.conn.SetDeadline(time.Now().Add(handlerTimeoutHello))
 
@@ -79,8 +83,7 @@ func (h*hSocksHandle)Handle() error {
 	}
 }
 
-
-func (h*hSocksHandle)handleSocks5() error {
+func (h *hSocksHandle) handleSocks5() error {
 	conn := h.conn //客户端连接
 
 	b := make([]byte, 1, 1024)
@@ -130,16 +133,16 @@ func (h*hSocksHandle)handleSocks5() error {
 		b[0] = domainSize
 
 		if _, err := io.ReadFull(conn, b[1:]); err != nil {
-			return fmt.Errorf("读地址错误：%v", )
+			return fmt.Errorf("读地址错误：%v", err)
 		}
 		host = net.IP(b).String()
 	} else if atyp == 0x03 {
 		b = b[:domainSize]
 		if _, err := io.ReadFull(conn, b); err != nil {
-			return fmt.Errorf("读地址错误：%v", )
+			return fmt.Errorf("读地址错误：%v", err)
 		}
 		host = string(b)
-	}else {
+	} else {
 		return fmt.Errorf("不支持的地址格式：atyp=%v", atyp)
 	}
 
@@ -150,20 +153,48 @@ func (h*hSocksHandle)handleSocks5() error {
 	}
 	prot = binary.BigEndian.Uint16(b)
 
-	if ver != 0x05 || cmd != 0x01 {
+	if ver != 0x05 {
+		conn.Write([]byte{0x05, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		return fmt.Errorf("不支持的 SOCKS 版本。ver=%v", ver)
+	}
+	if cmd == 0x03 {
+		return h.handleSocks5UDPAssociate(conn)
+	}
+	if cmd != 0x01 {
 		conn.Write([]byte{0x05, 0x07, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 		return fmt.Errorf("不支持的命令。ver=%v,cmd=%v", ver, cmd)
+	}
+	if environmentEnabled("TCPROUTE_TUN_DNS") && host == "198.18.0.1" && prot == 53 {
+		if _, err := conn.Write([]byte{5, 0, 0, 1, 0, 0, 0, 0, 0, 0}); err != nil {
+			return err
+		}
+		return forwardTunTCPDNS(context.Background(), conn)
 	}
 
 	conn.SetDeadline(time.Now().Add(handlerTimeoutForward))
 
+	rAddr := net.JoinHostPort(host, strconv.FormatUint(uint64(prot), 10))
+	preProtocol := CheckPre("tcp", rAddr)
+	if preProtocol != preProtocolUnknown {
+		if _, err := conn.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}); err != nil {
+			return fmt.Errorf("回应客户端命令失败：%v", err)
+		}
+		nextConn, nextAddress, ok := Pre(conn, rAddr, preProtocol)
+		if ok {
+			log.Printf("[客户端 DNS 纠正] 目的地址 %v 已恢复为 %v", rAddr, nextAddress)
+		}
+		conn = nextConn
+		rAddr = nextAddress
+	}
+
 	// 连接目标网站
 	upStrrem := h.hSocksServer.upStream
-	rAddr := net.JoinHostPort(host, strconv.FormatUint(uint64(prot), 10))
 	oConn, oConnErrorReporting, err := upStrrem.DialTimeout("tcp", rAddr, handlerNewTimeout)
 	if err != nil {
 		conn.SetDeadline(time.Now().Add(handlerTimeoutHello))
-		conn.Write([]byte{0x05, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		if preProtocol == preProtocolUnknown {
+			conn.Write([]byte{0x05, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		}
 		return fmt.Errorf("无法连接目标网站( %v )，详细错误：%v", rAddr, err)
 	}
 	defer oConn.Close()
@@ -174,7 +205,7 @@ func (h*hSocksHandle)handleSocks5() error {
 	if v, ok := conn.RemoteAddr().(*net.TCPAddr); ok {
 		if ip4 := v.IP.To4(); ip4 != nil {
 			rIp = []byte(ip4)
-		}else {
+		} else {
 			rIp = []byte(v.IP)
 		}
 		switch len(rIp) {
@@ -197,12 +228,13 @@ func (h*hSocksHandle)handleSocks5() error {
 	b = append(b, rIp...)
 	b = append(b, rPort...)
 
-	if _, err := conn.Write(b); err != nil {
-		return fmt.Errorf("回应客户端命令失败：%v", err)
+	if preProtocol == preProtocolUnknown {
+		if _, err := conn.Write(b); err != nil {
+			return fmt.Errorf("回应客户端命令失败：%v", err)
+		}
 	}
 
 	fCount := forwardCount{} //转发计数
-
 
 	startTime := time.Now()
 	err = forwardConn(conn, oConn, handlerTimeoutForward, &fCount)
@@ -216,11 +248,11 @@ func (h*hSocksHandle)handleSocks5() error {
 		lrecv := atomic.LoadUint64(&fCount.recv)
 
 		// 连接建立时间小于60秒，并且未收到任何数据
-		if connTime < 60 * time.Second && lrecv == 0 && lsend > 50 {
+		if connTime < 60*time.Second && lrecv == 0 && lsend > 50 {
 			oConnErrorReporting.Report(ErrConnTypeRead0)
 		}
 
-		if connTime < 1 * time.Second && lrecv < 1024 && prot == 443 && lsend > 50 {
+		if connTime < 1*time.Second && lrecv < 1024 && prot == 443 && lsend > 50 {
 			oConnErrorReporting.Report(ErrConnTypeRead0)
 		}
 	}
@@ -230,8 +262,6 @@ func (h*hSocksHandle)handleSocks5() error {
 	return err
 }
 
-func (h*hSocksHandle)handleSocks4() error {
+func (h *hSocksHandle) handleSocks4() error {
 	return fmt.Errorf("未完成")
 }
-
-
