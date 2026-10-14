@@ -481,6 +481,8 @@ internal sealed class TcpRouteController : IDisposable
             if (process.HasExited || !WintunNetwork.PhysicalInterfaceIsAvailable(network))
                 throw new InvalidOperationException("Core or physical interface changed during Wintun startup.");
             NetworkChange.NetworkAddressChanged += PhysicalNetworkChanged;
+            if (network.InterfaceSelectionFallback)
+                LastMessage = "Selected outbound interface was unavailable; Automatic interface selection was used.";
         }
         else
         {
