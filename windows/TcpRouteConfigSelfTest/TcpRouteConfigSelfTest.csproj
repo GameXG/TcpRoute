@@ -9,6 +9,8 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="ArtifactSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/PowerShellOutput.cs" Link="PowerShellOutput.cs" />
+    <Compile Include="../TcpRouteTray/PowerShellOutputSelfTest.cs" Link="PowerShellOutputSelfTest.cs" />
     <Compile Include="../TcpRouteTray/ConfigurationChangeTracker.cs" Link="ConfigurationChangeTracker.cs" />
     <Compile Include="../TcpRouteTray/TraySettings.cs" Link="TraySettings.cs" />
     <Compile Include="../TcpRouteTray/TrayConfigurationSelfTest.cs" Link="TrayConfigurationSelfTest.cs" />

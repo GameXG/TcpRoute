@@ -11,6 +11,7 @@ internal static class Program
             GeoDataManagerSelfTest.Run();
             WintunDependenciesSelfTest.Run();
             TrayConfigurationSelfTest.Run();
+            PowerShellOutputSelfTest.Run();
             return;
         }
         using var instanceLock = new Mutex(false, @"Local\" + WintunNetwork.AdapterName(AppContext.BaseDirectory) + "-Client");

@@ -19,9 +19,11 @@ TUN mode. Stop before switching modes, interfaces, STUN, QUIC, or IPv6.
 
 Outbound interface defaults to **Automatic**. The menu lists interfaces whose
 status is **UP**, without requiring a gateway for inclusion. Manual selection
-is persisted by interface GUID. Startup uses it when it is UP and has a connected
-IPv4 default route; stale or temporarily unusable selections fall back to
-Automatic and record that fallback in the activity log.
+is persisted by interface GUID. GUID comparison accepts case and braces. Startup
+uses the same UP interface inventory as the menu and maps the GUID to its IPv4
+interface index, including logical/hidden interfaces. A selected interface must have a connected IPv4 default route and usable
+DNS. An unavailable manual selection produces a readable error; choose Automatic
+to allow default-route selection.
 
 Wintun requires the bundled architecture-matched `wintun.dll`. If Windows has
 disabled its IPv6 binding and IPv6 is off in TcpRoute2, startup skips IPv6

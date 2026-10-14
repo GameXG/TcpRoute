@@ -23,7 +23,7 @@ internal static class TrayConfigurationSelfTest
             var settings = new TraySettings {
                 SelectedConfigId = "config.toml", UseWintun = true, EnableIpv6 = true,
                 OutboundInterfaceId = Guid.NewGuid().ToString("D"), GeoDataLastError = "managed state",
-                TunRecovery = new WintunNetworkState { Name = "TcpRoute-1234ABCD", InterfaceIndex = 7, InterfaceSelectionFallback = true }
+                TunRecovery = new WintunNetworkState { Name = "TcpRoute-1234ABCD", InterfaceIndex = 7 }
             };
             settings.SaveUserConfiguration(path);
             var userJson = File.ReadAllText(path);
@@ -34,7 +34,6 @@ internal static class TrayConfigurationSelfTest
             Expect(loaded.UseWintun && loaded.EnableIpv6 && loaded.OutboundInterfaceId == settings.OutboundInterfaceId, "Runtime preferences did not round-trip");
             loaded.CopyManagedStateFrom(settings);
             Expect(loaded.TunRecovery?.InterfaceIndex == 7, "Reload discarded network recovery");
-            Expect(loaded.TunRecovery?.InterfaceSelectionFallback == true, "Reload discarded interface fallback state");
             Expect(loaded.UserConfigurationJson() == userJson, "Managed-state changes altered the configuration signature");
             loaded.OutboundInterfaceId = "invalid";
             try { loaded.ValidatePreferences(); throw new Exception("Invalid interface ID was accepted"); }

@@ -16,7 +16,6 @@ internal sealed record WintunNetworkState
     public string WeakHostSend4 { get; init; } = "Disabled";
     public string WeakHostSend6 { get; init; } = "Disabled";
     public bool EnableIpv6 { get; init; }
-    public bool InterfaceSelectionFallback { get; init; }
     public string[] DnsServers { get; init; } = [];
     public string[] Addresses { get; init; } = [];
 }
@@ -40,19 +39,26 @@ internal static class WintunNetwork
         if (!IsAdministrator) throw new InvalidOperationException("Wintun requires administrator privileges.");
         var name = AdapterName(root);
         var requestedInterface = string.IsNullOrEmpty(interfaceId) ? "" : Guid.Parse(interfaceId).ToString("D");
+        var requestedIndex = 0;
+        if (requestedInterface.Length > 0)
+        {
+            var requestedGuid = Guid.Parse(requestedInterface);
+            // Use the same inventory as the tray menu, including logical and hidden interfaces.
+            var selected = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(adapter =>
+                adapter.OperationalStatus == OperationalStatus.Up && Guid.TryParse(adapter.Id, out var id) && id == requestedGuid);
+            if (selected is null)
+                throw new InvalidOperationException("The selected outbound interface is unavailable. Select another interface or Automatic.");
+            if (!selected.Supports(NetworkInterfaceComponent.IPv4) || selected.GetIPProperties().GetIPv4Properties() is not { } ipv4)
+                throw new InvalidOperationException("The selected outbound interface has no IPv4 interface. Select another interface or Automatic.");
+            requestedIndex = ipv4.Index;
+        }
         var script = $$$"""
         $ErrorActionPreference = 'Stop'
         if (Get-NetAdapter -Name '{{{name}}}' -ErrorAction SilentlyContinue) { throw 'The TcpRoute2 Wintun adapter is already in use.' }
         $routes = @(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' | Where-Object { $_.NextHop -ne '0.0.0.0' -and (Get-NetIPInterface -InterfaceIndex $_.InterfaceIndex -AddressFamily IPv4).ConnectionState -eq 'Connected' } | Sort-Object @{Expression={$_.RouteMetric + (Get-NetIPInterface -InterfaceIndex $_.InterfaceIndex -AddressFamily IPv4).InterfaceMetric}})
-        $interfaceSelectionFallback = $false
-        if ('{{{requestedInterface}}}' -ne '') {
-            $selected = @(Get-NetAdapter | Where-Object { $_.InterfaceGuid -eq [guid]'{{{requestedInterface}}}' -and $_.Status -eq 'Up' } | Select-Object -First 1)
-            if ($selected.Count -eq 0) {
-                $interfaceSelectionFallback = $true
-            } else {
-                $selectedRoutes = @($routes | Where-Object { $_.InterfaceIndex -eq $selected[0].ifIndex })
-                if ($selectedRoutes.Count -eq 0) { $interfaceSelectionFallback = $true } else { $routes = $selectedRoutes }
-            }
+        if ({{{requestedIndex}}} -ne 0) {
+            $routes = @($routes | Where-Object { $_.InterfaceIndex -eq {{{requestedIndex}}} })
+            if ($routes.Count -eq 0) { throw 'The selected outbound interface has no connected IPv4 default route. Select another interface or Automatic.' }
         }
         if ($routes.Count -eq 0) { throw 'No physical IPv4 default route is available.' }
         $index = $routes[0].InterfaceIndex
@@ -66,7 +72,7 @@ internal static class WintunNetwork
             -not [System.Net.IPAddress]::IsLoopback($ip) -and $_ -ne '198.18.0.1' -and ({{{(ipv6 ? "$true" : "$false")}}} -or $ip.AddressFamily -eq 'InterNetwork')
         })
         if ($servers.Count -eq 0) { throw 'The physical interface has no usable DNS server.' }
-        [ordered]@{Name='{{{name}}}'; InterfaceIndex=$index; WeakHostSend4=[string]$v4.WeakHostSend; WeakHostSend6=[string]$v6.WeakHostSend; EnableIpv6={{{(ipv6 ? "$true" : "$false")}}}; InterfaceSelectionFallback=$interfaceSelectionFallback; DnsServers=$servers; Addresses=@((Get-NetIPAddress -InterfaceIndex $index).IPAddress)} | ConvertTo-Json -Depth 4 -Compress
+        [ordered]@{Name='{{{name}}}'; InterfaceIndex=$index; WeakHostSend4=[string]$v4.WeakHostSend; WeakHostSend6=[string]$v6.WeakHostSend; EnableIpv6={{{(ipv6 ? "$true" : "$false")}}}; DnsServers=$servers; Addresses=@((Get-NetIPAddress -InterfaceIndex $index).IPAddress)} | ConvertTo-Json -Depth 4 -Compress
         """;
         var json = await RunAsync(script).ConfigureAwait(false);
         return JsonSerializer.Deserialize<WintunNetworkState>(json) ?? throw new InvalidOperationException("Could not read physical interface state.");
@@ -154,7 +160,7 @@ internal static class WintunNetwork
             try {
             """ + "\n" + script + "\n" + """
             } catch {
-                [Console]::Error.WriteLine(($_ | Out-String).Trim())
+                [Console]::Error.WriteLine($_.Exception.Message)
                 exit 1
             }
             """;
@@ -164,16 +170,9 @@ internal static class WintunNetwork
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try { await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false); }
         catch { process.Kill(entireProcessTree: true); await process.WaitForExitAsync().ConfigureAwait(false); throw; }
-        var text = await output.ConfigureAwait(false); var error = CleanPowerShellError(await errors.ConfigureAwait(false));
+        var text = await output.ConfigureAwait(false); var error = PowerShellOutput.CleanError(await errors.ConfigureAwait(false));
         if (process.ExitCode != 0) throw new InvalidOperationException("Windows network configuration failed: " + error);
         return text.Trim();
     }
 
-    private static string CleanPowerShellError(string error)
-    {
-        var text = error.Trim();
-        var clixml = text.IndexOf("<Objs", StringComparison.OrdinalIgnoreCase);
-        if (clixml >= 0) text = text[..clixml].Trim();
-        return string.IsNullOrWhiteSpace(text) ? "PowerShell network configuration failed." : text;
-    }
 }

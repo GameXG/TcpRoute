@@ -8,6 +8,7 @@ internal static class Program
         GeoDataManagerSelfTest.Run();
         WintunDependenciesSelfTest.Run();
         TrayConfigurationSelfTest.Run();
+        PowerShellOutputSelfTest.Run();
         foreach (var artifact in args) ArtifactSelfTest.Run(artifact);
         Console.WriteLine("All Windows config self-tests passed.");
     }
