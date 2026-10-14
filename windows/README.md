@@ -31,6 +31,12 @@ interface configuration. Enabling IPv6 requires that binding. When IPv6 is
 available, TUN captures it so the core can enforce the IPv6 policy.
 PowerShell progress is suppressed and failures are shown as readable text.
 
+TUN address and route setup reuses existing entries on the owned adapter and
+corrects their prefix/metric when needed. Newly added entries use ActiveStore,
+so repeated starts and partially completed setup do not fail on duplicate IPs.
+Listener readiness uses a complete local SOCKS5 UDP ASSOCIATE exchange without
+contacting an upstream or sending UDP traffic.
+
 Wintun has no per-application routing, comprehensive leak blocking, ICMP/ping,
 or automatic network handover. The DNS gateway supports A/AAAA; other record
 types receive NOTIMP. Interface loss stops the session; restart to select again.

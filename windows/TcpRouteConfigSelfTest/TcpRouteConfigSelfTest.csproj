@@ -9,6 +9,9 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="ArtifactSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/WintunNetworkSelfTest.cs" Link="WintunNetworkSelfTest.cs" />
+    <Compile Include="../TcpRouteTray/SocksListenerProbe.cs" Link="SocksListenerProbe.cs" />
+    <Compile Include="../TcpRouteTray/SocksListenerProbeSelfTest.cs" Link="SocksListenerProbeSelfTest.cs" />
     <Compile Include="../TcpRouteTray/PowerShellOutput.cs" Link="PowerShellOutput.cs" />
     <Compile Include="../TcpRouteTray/PowerShellOutputSelfTest.cs" Link="PowerShellOutputSelfTest.cs" />
     <Compile Include="../TcpRouteTray/ConfigurationChangeTracker.cs" Link="ConfigurationChangeTracker.cs" />

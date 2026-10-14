@@ -12,6 +12,8 @@ internal static class Program
             WintunDependenciesSelfTest.Run();
             TrayConfigurationSelfTest.Run();
             PowerShellOutputSelfTest.Run();
+            SocksListenerProbeSelfTest.Run();
+            WintunNetworkSelfTest.Run();
             return;
         }
         using var instanceLock = new Mutex(false, @"Local\" + WintunNetwork.AdapterName(AppContext.BaseDirectory) + "-Client");

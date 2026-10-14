@@ -9,6 +9,8 @@ internal static class Program
         WintunDependenciesSelfTest.Run();
         TrayConfigurationSelfTest.Run();
         PowerShellOutputSelfTest.Run();
+        SocksListenerProbeSelfTest.Run();
+        WintunNetworkSelfTest.Run();
         foreach (var artifact in args) ArtifactSelfTest.Run(artifact);
         Console.WriteLine("All Windows config self-tests passed.");
     }

@@ -80,8 +80,13 @@ internal static class WintunNetwork
 
     public static async Task ApplyAsync(WintunNetworkState state)
     {
+        await RunAsync(BuildApplyScript(state)).ConfigureAwait(false);
+    }
+
+    internal static string BuildApplyScript(WintunNetworkState state)
+    {
         Validate(state);
-        await RunAsync($$$"""
+        return $$$"""
         $ErrorActionPreference = 'Stop'
         $adapter = Get-NetAdapter -Name '{{{state.Name}}}'
         $index = $adapter.ifIndex
@@ -96,16 +101,32 @@ internal static class WintunNetwork
             }
             Set-NetIPInterface -InterfaceIndex $index -AddressFamily $family -NlMtuBytes 1500 -AutomaticMetric Disabled -InterfaceMetric 5
         }
-        New-NetIPAddress -InterfaceIndex $index -IPAddress '198.18.0.2' -PrefixLength 30 | Out-Null
-        if ($tun6) { New-NetIPAddress -InterfaceIndex $index -IPAddress 'fd73:7463:7072::2' -PrefixLength 126 | Out-Null }
+        function Ensure-TunAddress([string]$address, [int]$prefixLength) {
+            $existing = @(Get-NetIPAddress -InterfaceIndex $index -IPAddress $address -PolicyStore ActiveStore -ErrorAction SilentlyContinue)
+            if ($existing.Count -eq 0) {
+                New-NetIPAddress -InterfaceIndex $index -IPAddress $address -PrefixLength $prefixLength -SkipAsSource $false -PolicyStore ActiveStore | Out-Null
+            } elseif (@($existing | Where-Object { $_.PrefixLength -ne $prefixLength -or $_.SkipAsSource }).Count -gt 0) {
+                Set-NetIPAddress -InterfaceIndex $index -IPAddress $address -PrefixLength $prefixLength -SkipAsSource $false -PolicyStore ActiveStore
+            }
+        }
+        function Ensure-TunRoute([string]$prefix, [string]$nextHop) {
+            $existing = @(Get-NetRoute -InterfaceIndex $index -DestinationPrefix $prefix -NextHop $nextHop -PolicyStore ActiveStore -ErrorAction SilentlyContinue)
+            if ($existing.Count -eq 0) {
+                New-NetRoute -InterfaceIndex $index -DestinationPrefix $prefix -NextHop $nextHop -RouteMetric 5 -PolicyStore ActiveStore | Out-Null
+            } elseif (@($existing | Where-Object { $_.RouteMetric -ne 5 }).Count -gt 0) {
+                Set-NetRoute -InterfaceIndex $index -DestinationPrefix $prefix -NextHop $nextHop -RouteMetric 5 -PolicyStore ActiveStore
+            }
+        }
+        Ensure-TunAddress '198.18.0.2' 30
+        if ($tun6) { Ensure-TunAddress 'fd73:7463:7072::2' 126 }
         Set-DnsClient -InterfaceIndex $index -RegisterThisConnectionsAddress $false
         Set-DnsClientServerAddress -InterfaceIndex $index -ServerAddresses '198.18.0.1'
-        foreach ($prefix in @('0.0.0.0/1','128.0.0.0/1')) { New-NetRoute -InterfaceIndex $index -DestinationPrefix $prefix -NextHop '0.0.0.0' -RouteMetric 5 -PolicyStore ActiveStore | Out-Null }
+        foreach ($prefix in @('0.0.0.0/1','128.0.0.0/1')) { Ensure-TunRoute $prefix '0.0.0.0' }
         if ($tun6) {
-            foreach ($prefix in @('::/1','8000::/1')) { New-NetRoute -InterfaceIndex $index -DestinationPrefix $prefix -NextHop '::' -RouteMetric 5 -PolicyStore ActiveStore | Out-Null }
+            foreach ($prefix in @('::/1','8000::/1')) { Ensure-TunRoute $prefix '::' }
         }
         Clear-DnsClientCache
-        """).ConfigureAwait(false);
+        """;
     }
 
     [SupportedOSPlatform("windows")]

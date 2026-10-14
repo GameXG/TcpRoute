@@ -851,6 +851,7 @@ internal sealed class TcpRouteController : IDisposable
             {
                 using var socket = new TcpClient();
                 await socket.ConnectAsync(IPAddress.Loopback, port, timeout.Token);
+                await SocksListenerProbe.VerifyAsync(socket.GetStream(), timeout.Token);
                 return;
             }
             catch (SocketException) { await Task.Delay(100, timeout.Token); }
