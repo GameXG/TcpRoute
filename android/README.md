@@ -17,7 +17,35 @@ The Android entry point is a native Kotlin app with:
 - a `VpnService` that owns Android VPN permission and TUN lifecycle,
 - a foreground service for the local SOCKS mode,
 - config storage under the app files directory,
+- subscription management from the top-right menu, with persistent sources, cached nodes and TOML imports,
 - per-ABI TcpRoute2 core binaries plus the pinned `tun2proxy` Android library, isolated runner, and JNI bridge.
+
+## Subscriptions
+
+Open **Subscriptions** in the top-right menu. Add a named HTTP(S) source, set an
+optional User-Agent and save. **Refresh** reads URI lists, Base64 lists, JSON node
+arrays, complete Clash YAML profiles or Surge profiles. **Nodes** selects the
+imported routes; select/clear all is available, and long-pressing a node edits its
+override JSON. The source editor also accepts an override map keyed by node ID.
+
+Source defaults include `DnsResolve`, `Credit`, `Sleep` (milliseconds),
+`CorrectDelay`, `UpProxy` and `DialProxyFor`. Checked locks enforce those defaults
+during import and refresh. `UpProxy` and `DialProxyFor` cannot be combined.
+
+Imported nodes are real `[[UpStreams]]` entries named
+`sub_<subscription-name>_<stable-node-id>` in the saved TOML. Refresh updates
+connection details, adds new nodes and preserves user-edited defaults, rules and
+comments. Deselection, disappeared nodes and source deletion set `Remove=true`;
+reselecting restores the node. Refresh retains deselection by node name.
+
+Updates default to manual (`0`). An interval of at least 15 minutes opts into
+Android's periodic background updates; Android controls their exact execution
+time. Failed downloads, unsupported conversions and invalid edits retain the
+previous configuration and cache. Saved changes apply on the next session start;
+restart an existing VPN/SOCKS session to use the new routes.
+
+**Enable system proxy** advertises the local HTTP proxy on the VPN network on
+Android 10+. It does not grant privileged global proxy control.
 
 ## Layout
 

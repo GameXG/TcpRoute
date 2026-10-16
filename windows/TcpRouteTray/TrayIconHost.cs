@@ -18,6 +18,7 @@ internal sealed class TrayIconHost : IDisposable
     private bool _busy;
     private bool _geoBusy;
     private DateTime _nextGeoAttempt;
+    private DateTime _nextSubscriptionAttempt;
     private readonly ConfigurationChangeTracker _readErrors = new("");
 
     public TrayIconHost(TcpRouteController controller, LogWindow window, System.Windows.Application application)
@@ -64,10 +65,18 @@ internal sealed class TrayIconHost : IDisposable
         var preferences = Submenu(T("Runtime settings", "运行设置", "執行設定"));
         Choice(preferences, T("System proxy", "系统代理", "系統代理"), _controller.SystemProxyEnabled, () => _controller.SetSystemProxyEnabled(!_controller.SystemProxyEnabled), !_controller.UseWintun);
         Choice(preferences, T("Allow LAN", "允许 LAN", "允許 LAN"), _controller.AllowLan, () => _controller.SetAllowLan(!_controller.AllowLan), !running && !_controller.UseWintun);
-        Choice(preferences, "STUN", _controller.AllowStun, () => _controller.SetAllowStun(!_controller.AllowStun), !running);
-        Choice(preferences, "QUIC", _controller.AllowQuic, () => _controller.SetAllowQuic(!_controller.AllowQuic), !running);
-        Choice(preferences, "IPv6", _controller.EnableIpv6, () => _controller.SetEnableIpv6(!_controller.EnableIpv6), !running);
-        preferences.DropDownItems.Add(new Forms.ToolStripMenuItem($"{_controller.Language} / {_controller.Appearance}") { Enabled = false });
+        Choice(preferences, "STUN", _controller.AllowStun, () => _controller.SetAllowStun(!_controller.AllowStun), !running && !_controller.IsStarting);
+        Choice(preferences, "QUIC", _controller.AllowQuic, () => _controller.SetAllowQuic(!_controller.AllowQuic), !running && !_controller.IsStarting);
+        Choice(preferences, "IPv6", _controller.EnableIpv6, () => _controller.SetEnableIpv6(!_controller.EnableIpv6), !running && !_controller.IsStarting);
+        Choice(preferences, T("Automatic client settings reload", "自动重载客户端设置", "自動重新載入客戶端設定"), _controller.AutoReloadClientSettings, () => _controller.SetAutoReloadClientSettings(!_controller.AutoReloadClientSettings), true);
+        var language = new Forms.ToolStripMenuItem(T("Language", "语言", "語言"));
+        foreach (var option in new[] { (Id: "system", Label: T("System", "跟随系统", "跟隨系統")), (Id: "en", Label: "English"), (Id: "zh-Hans", Label: "简体中文"), (Id: "zh-Hant", Label: "繁體中文") })
+            Choice(language, option.Label, _controller.Language == option.Id, () => _controller.SetLanguage(option.Id), true);
+        preferences.DropDownItems.Add(language);
+        var appearance = new Forms.ToolStripMenuItem(T("Appearance", "主题", "主題"));
+        foreach (var option in new[] { (Id: "system", Label: T("System", "跟随系统", "跟隨系統")), (Id: "light", Label: T("Light", "浅色", "淺色")), (Id: "dark", Label: T("Dark", "深色", "深色")) })
+            Choice(appearance, option.Label, _controller.Appearance == option.Id, () => _controller.SetAppearance(option.Id), true);
+        preferences.DropDownItems.Add(appearance);
         Add(preferences.DropDownItems, T("Edit client configuration...", "编辑客户端配置…", "編輯客戶端配置…"), () => EditFile(_controller.SettingsPath));
 
         var configurations = Submenu(T("Configuration", "配置", "配置"));
@@ -82,11 +91,48 @@ internal sealed class TrayIconHost : IDisposable
         }
         Add(configurations.DropDownItems, T("Open configuration folder", "打开配置目录", "開啟配置目錄"), () => { _controller.OpenConfigFolder(); return Task.CompletedTask; });
         Add(configurations.DropDownItems, T("Reload now", "立即重载", "立即重新載入"), () => _controller.ReloadConfigurationAsync());
+        var subscriptions = Submenu(T("Subscriptions", "订阅", "訂閱"));
+        Add(subscriptions.DropDownItems, T("Edit subscriptions...", "编辑订阅…", "編輯訂閱…"), () => EditFile(_controller.SettingsPath));
+        foreach (var source in _controller.Subscriptions)
+        {
+            var menu = new Forms.ToolStripMenuItem((string.IsNullOrEmpty(source.Name) ? source.Id : source.Name).Replace("&", "&&"));
+            subscriptions.DropDownItems.Add(menu);
+            Add(menu.DropDownItems, T("Update now", "立即更新", "立即更新"), () => _controller.RefreshSubscriptionAsync(source.Id));
+            try
+            {
+                var cache = _controller.SubscriptionCache(source);
+                var selectedNodes = _controller.SubscriptionSelectedNodes(source.Id);
+                menu.DropDownItems.Add(new Forms.ToolStripMenuItem($"{selectedNodes.Count} / {cache.Nodes.Count} · {cache.UpdatedAt.ToLocalTime():g}") { Enabled = false });
+                foreach (var page in cache.Nodes.Chunk(50).Select((nodes, index) => (nodes, index)))
+                {
+                    var items = menu.DropDownItems;
+                    if (cache.Nodes.Count > 50)
+                    {
+                        var group = new Forms.ToolStripMenuItem($"{page.index * 50 + 1}-{page.index * 50 + page.nodes.Length}");
+                        items.Add(group); items = group.DropDownItems;
+                    }
+                    foreach (var node in page.nodes)
+                    {
+                        var selected = selectedNodes.Contains(node.Id);
+                        var label = (node.Removed ? T("[Removed] ", "[已移除] ", "[已移除] ") : "") + node.Name;
+                        var item = Add(items, label.Replace("&", "&&"), () => _controller.SelectSubscriptionNodeAsync(source.Id, node.Id, !selected), !node.Removed || selected);
+                        item.Checked = selected; item.ToolTipText = source.ManagedPrefix + node.Id;
+                    }
+                }
+                foreach (var missingId in selectedNodes.Except(cache.Nodes.Select(node => node.Id), StringComparer.Ordinal))
+                {
+                    var item = Add(menu.DropDownItems, T("[Not in cache] ", "[缓存缺失] ", "[快取缺失] ") + missingId,
+                        () => _controller.SelectSubscriptionNodeAsync(source.Id, missingId, false));
+                    item.Checked = true;
+                }
+            }
+            catch { menu.DropDownItems.Add(new Forms.ToolStripMenuItem(T("Cache unavailable; update required", "缓存不可用，请更新", "快取不可用，請更新")) { Enabled = false }); }
+        }
         var geo = Submenu(T("Geo data", "Geo 数据", "Geo 資料"));
         var snapshot = _controller.GetGeoDataSnapshot();
         geo.DropDownItems.Add(new Forms.ToolStripMenuItem($"geosite: {snapshot.GeositeBytes:N0} B / geoip: {snapshot.GeoipBytes:N0} B") { Enabled = false });
         geo.DropDownItems.Add(new Forms.ToolStripMenuItem($"{snapshot.Interval} / {snapshot.LastSuccess?.ToLocalTime().ToString("g") ?? "-"}") { Enabled = false });
-        Add(geo.DropDownItems, T("Update now", "立即更新", "立即更新"), async () => { await _controller.UpdateGeoDataAsync(); }, !_geoBusy);
+        Add(geo.DropDownItems, T("Update now", "立即更新", "立即更新"), async () => { await _controller.UpdateGeoDataAsync(); });
         Add(_menu.Items, T("Export activity log...", "导出活动日志…", "匯出活動日誌…"), () => { _controller.OpenLogs(); return Task.CompletedTask; });
         _menu.Items.Add(new Forms.ToolStripSeparator());
         Add(_menu.Items, T("Quit", "退出", "退出"), () => { _window.AllowClose(); _window.Close(); _application.Shutdown(); return Task.CompletedTask; });
@@ -118,7 +164,7 @@ internal sealed class TrayIconHost : IDisposable
 
     private string ReadSignature()
     {
-        try { return _controller.ReadConfigurationSnapshot().Signature; }
+        try { return _controller.ReadConfigurationSnapshot(_controller.AutoReloadClientSettings).Signature; }
         catch (Exception error) { _controller.RecordEvent(error.Message); return ""; }
     }
 
@@ -137,18 +183,26 @@ internal sealed class TrayIconHost : IDisposable
         if (_busy || _controller.IsStarting) return;
         try
         {
-            var next = _controller.ReadConfigurationSnapshot(); _readErrors.Accept("");
-            if (_changes.Observe(next.Signature)) await RunAsync(() => _controller.ReloadConfigurationAsync());
+            var next = _controller.ReadConfigurationSnapshot(_controller.AutoReloadClientSettings); _readErrors.Accept("");
+            if (_changes.Observe(next.Signature)) await RunAsync(() => _controller.ReloadConfigurationAsync(_controller.AutoReloadClientSettings));
         }
         catch (Exception error)
         {
             if (_readErrors.Observe(error.Message)) ReportError(error);
         }
-        if (_geoBusy || DateTime.UtcNow < _nextGeoAttempt || !GeoDataManager.IsDue(_controller.GetGeoDataSnapshot())) return;
-        _geoBusy = true; _nextGeoAttempt = DateTime.UtcNow.AddMinutes(5);
-        try { await _controller.UpdateGeoDataAsync(onlyIfDue: true); }
-        catch (Exception error) { ReportError(error); }
-        finally { _geoBusy = false; }
+        if (DateTime.UtcNow >= _nextSubscriptionAttempt)
+        {
+            _nextSubscriptionAttempt = DateTime.UtcNow.AddMinutes(1);
+            try { if (_controller.SubscriptionsDue()) await RunAsync(() => _controller.RefreshDueSubscriptionsAsync()); }
+            catch (Exception error) { ReportError(error); }
+        }
+        if (!_geoBusy && DateTime.UtcNow >= _nextGeoAttempt && GeoDataManager.IsDue(_controller.GetGeoDataSnapshot()))
+        {
+            _geoBusy = true; _nextGeoAttempt = DateTime.UtcNow.AddMinutes(5);
+            try { await _controller.UpdateGeoDataAsync(onlyIfDue: true); }
+            catch (Exception error) { ReportError(error); }
+            finally { _geoBusy = false; }
+        }
     }
 
     private void ReportError(Exception error)

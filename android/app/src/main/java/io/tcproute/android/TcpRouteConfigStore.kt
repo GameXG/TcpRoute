@@ -68,7 +68,9 @@ data class EditableUpstream(
     val sleep: Int,
     val correctDelay: Int,
     val whitelist: List<EditableDomainList> = emptyList(),
-    val blacklist: List<EditableDomainList> = emptyList()
+    val blacklist: List<EditableDomainList> = emptyList(),
+    val dialProxyFor: String = "",
+    val remove: Boolean = false
 ) {
     companion object {
         fun direct(): EditableUpstream = EditableUpstream(
@@ -133,7 +135,13 @@ object TcpRouteConfigStore {
 
     fun saveEditableConfig(context: Context, config: EditableTcpRouteConfig): File {
         validate(config)
-        return ensureDefaultConfig(context).apply { writeText(renderEditableConfig(config)) }
+        val file = ensureDefaultConfig(context)
+        val original = file.readText()
+        val rendered = renderEditableConfig(config)
+        val content = if (original.contains("# TcpRoute2 subscription "))
+            SubscriptionTomlEditor.edit(context, rendered, retainFrom = original).getString("Content") else rendered
+        SubscriptionTomlEditor.write(file, original, content)
+        return file
     }
 
     fun loadRawConfig(context: Context): String =
@@ -393,6 +401,8 @@ object TcpRouteConfigStore {
                 appendLine("[[UpStreams]]")
                 appendLine("Name=${tomlString(upstream.name.trim())}")
                 appendLine("ProxyUrl=${tomlString(upstream.proxyUrl.trim())}")
+                if (upstream.dialProxyFor.isNotEmpty()) appendLine("DialProxyFor=${tomlString(upstream.dialProxyFor)}")
+                if (upstream.remove) appendLine("Remove=true")
                 appendLine("DnsResolve=${upstream.dnsResolve}")
                 appendLine("Credit=${upstream.credit}")
                 appendLine("Sleep=${upstream.sleep}")
@@ -457,6 +467,8 @@ object TcpRouteConfigStore {
                 EditableUpstream(
                     name = values["Name"] ?: "proxy",
                     proxyUrl = values["ProxyUrl"] ?: "socks5://127.0.0.1:1080",
+                    dialProxyFor = values["DialProxyFor"] ?: "",
+                    remove = values["Remove"]?.toBooleanStrictOrNull() ?: false,
                     dnsResolve = values["DnsResolve"]?.toBooleanStrictOrNull() ?: false,
                     credit = values["Credit"]?.toIntOrNull() ?: 0,
                     sleep = values["Sleep"]?.toIntOrNull() ?: 0,
@@ -469,7 +481,7 @@ object TcpRouteConfigStore {
         }
 
         content.lineSequence().forEach { line ->
-            when (line.trim()) {
+            when (stripLineComment(line).trim()) {
                 "[[UpStreams]]" -> {
                     flushUpstream()
                     upstream = MutableUpstream()

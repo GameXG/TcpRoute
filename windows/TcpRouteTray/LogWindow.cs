@@ -18,8 +18,8 @@ internal sealed class LogWindow : Window
     private readonly TcpRouteController _controller;
     private readonly TextBox _output = new()
     {
-        IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap,
-        VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+        IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
+        VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         FontFamily = new FontFamily("Consolas"), FontSize = 13, BorderThickness = new Thickness(0), Padding = new Thickness(12)
     };
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(500) };

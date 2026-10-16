@@ -61,6 +61,8 @@ internal sealed class EditableUpstream
 {
     public string Name { get; set; } = "";
     public string ProxyUrl { get; set; } = "";
+    public string DialProxyFor { get; set; } = "";
+    public bool Remove { get; set; }
     public bool DnsResolve { get; set; }
     public int Credit { get; set; }
     public int Sleep { get; set; }
@@ -170,6 +172,8 @@ internal static partial class EditableTcpRouteConfigCodec
             builder.AppendLine("[[UpStreams]]");
             builder.AppendLine($"Name={TomlString(upstream.Name.Trim())}");
             builder.AppendLine($"ProxyUrl={TomlString(upstream.ProxyUrl.Trim())}");
+            if (!string.IsNullOrEmpty(upstream.DialProxyFor)) builder.AppendLine($"DialProxyFor={TomlString(upstream.DialProxyFor)}");
+            if (upstream.Remove) builder.AppendLine("Remove=true");
             builder.AppendLine($"DnsResolve={upstream.DnsResolve.ToString().ToLowerInvariant()}");
             builder.AppendLine($"Credit={upstream.Credit}");
             builder.AppendLine($"Sleep={upstream.Sleep}");
@@ -405,6 +409,8 @@ internal static partial class EditableTcpRouteConfigCodec
             {
                 Name = Value(values, "Name", "proxy"),
                 ProxyUrl = Value(values, "ProxyUrl", "socks5://127.0.0.1:1080"),
+                DialProxyFor = Value(values, "DialProxyFor", ""),
+                Remove = bool.TryParse(Value(values, "Remove"), out var remove) && remove,
                 DnsResolve = bool.TryParse(Value(values, "DnsResolve"), out var dns) && dns,
                 Credit = IntValue(values, "Credit"), Sleep = IntValue(values, "Sleep"),
                 CorrectDelay = IntValue(values, "CorrectDelay")
@@ -419,7 +425,7 @@ internal static partial class EditableTcpRouteConfigCodec
 
         foreach (var line in content.Replace("\r\n", "\n").Split('\n'))
         {
-            var trimmed = line.Trim();
+            var trimmed = StripLineComment(line).Trim();
             if (trimmed == "[[UpStreams]]") { FlushUpstream(); upstreamLines = new(); }
             else if (trimmed is "[[UpStreams.Whitelist]]" or "[[UpStreams.Blacklist]]")
             {

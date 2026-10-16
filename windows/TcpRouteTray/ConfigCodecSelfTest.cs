@@ -10,11 +10,18 @@ internal static class ConfigCodecSelfTest
         Expect(dnsRendered.Contains(dnsDraft.DnsToml, StringComparison.Ordinal) &&
             dnsDraft.DnsToml.Contains("Priority=20", StringComparison.Ordinal), "Quick save dropped DNS configuration");
         var defaults = new NetworkFeaturePolicy();
+        var dialDraft = EditableTcpRouteConfigCodec.Parse("dial", "addr=\"127.0.0.1:7070\"\n[[UpStreams]]\nName=\"front\"\nProxyUrl=\"socks5://127.0.0.1:1080\"\nDialProxyFor=\"target\"\n[[UpStreams]]\nName=\"target\"\nProxyUrl=\"https://127.0.0.1:8443\"\n");
+        Expect(dialDraft.Upstreams.Single(node => node.Name == "front").DialProxyFor == "target" && EditableTcpRouteConfigCodec.Render(dialDraft).Contains("DialProxyFor=\"target\""), "Windows codec dropped DialProxyFor");
         Expect(!defaults.AllowStun && !defaults.AllowQuic && !defaults.EnableIpv6,
             "Network features must default off");
         var enabledEnvironment = new NetworkFeaturePolicy(true, true, true).EnvironmentVariables;
         Expect(enabledEnvironment.Values.All(value => value == bool.TrueString),
             "Enabled network features were not mapped to the core environment");
+        var geoSources = TcpRouteConfigParser.GetGeoDataSources("[[GeoData]]\nType=\"geosite\"\nURL=\"https://example.test/geosite.dat\"\nUpdateInterval=\"0\"\n");
+        Expect(geoSources.Count == 1 && geoSources[0].ChecksumUrl == "" && geoSources[0].UpdateInterval == "0", "GeoData TOML did not preserve omitted-checksum settings");
+        var geoFollowedByRule = TcpRouteConfigParser.GetGeoDataSources("[[GeoData]]\nType=\"geoip\"\nUpdateInterval=\"24h\"\n[[UpStreams.Whitelist]]\nType=\"suffix\"\nPath=\"local.txt\"\n");
+        Expect(geoFollowedByRule.Count == 1 && geoFollowedByRule[0].Type == "geoip" && geoFollowedByRule[0].Url.EndsWith("geoip.dat") && geoFollowedByRule[0].ChecksumUrl == "", "GeoData parser crossed TOML table boundaries or invented a checksum URL");
+        Expect(GeoDataSource.ParseInterval("24h") == TimeSpan.FromDays(1) && GeoDataSource.ParseInterval("1h30m") == TimeSpan.FromMinutes(90), "TOML Geo data duration was not applied");
         var proxy = EditableUpstream.ProxyTemplate("socks5");
         proxy.Whitelist.Add(EditableDomainRule.Template(RuleSourceKind.Local));
         proxy.Whitelist[0].Path = "rules/local.txt";

@@ -156,6 +156,7 @@ class MainActivity : Activity() {
     @Deprecated("Deprecated in Android, retained for minSdk compatibility")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 4089) { if (resultCode == RESULT_OK) loadConfigEditor(); return }
         if (requestCode == RULE_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
             val ruleRow = pendingRuleFileRow
             val hostRow = pendingHostFileRow
@@ -469,6 +470,7 @@ class MainActivity : Activity() {
                     R.id.menuImportOnline -> showOnlineConfigDialog()
                     R.id.menuExport -> exportConfig()
                     R.id.menuGeoData -> showGeoDataDialog()
+                    R.id.menuSubscriptions -> showSubscriptionDialog()
                     R.id.menuWifiProxy -> showWifiProxyDialog()
                     R.id.menuLanguage -> showLanguageDialog()
                     else -> return@setOnMenuItemClickListener false
@@ -477,6 +479,14 @@ class MainActivity : Activity() {
             }
             show()
         }
+    }
+
+    private fun showSubscriptionDialog() {
+        fun open() { startActivityForResult(Intent(this, SubscriptionActivity::class.java), 4089) }
+        if (runCatching { collectQuickConfig() != TcpRouteConfigStore.loadEditableConfig(this) }.getOrDefault(true)) {
+            AlertDialog.Builder(this).setMessage(R.string.subscription_unsaved)
+                .setNegativeButton(android.R.string.cancel, null).setPositiveButton(android.R.string.ok) { _, _ -> loadConfigEditor(); open() }.show()
+        } else open()
     }
 
     private fun showWifiProxyDialog() {
@@ -519,7 +529,7 @@ class MainActivity : Activity() {
             GeoDataManager.INTERVAL_DAILY,
             GeoDataManager.INTERVAL_WEEKLY
         )
-        val selected = intervals.indexOf(snapshot.interval).coerceAtLeast(1)
+        val selected = intervals.indexOf(snapshot.interval).coerceAtLeast(0)
         val choices = arrayOf(
             getString(R.string.geodata_auto_off),
             getString(R.string.geodata_auto_daily),
@@ -858,7 +868,7 @@ class MainActivity : Activity() {
         val credit = numericEditText(upstream.credit)
         val sleep = numericEditText(upstream.sleep)
         val correctDelay = numericEditText(upstream.correctDelay)
-        val row = UpstreamRow(container, title, name, proxyUrl, proxyValidation, dnsResolve, credit, sleep, correctDelay)
+        val row = UpstreamRow(container, title, name, proxyUrl, proxyValidation, dnsResolve, credit, sleep, correctDelay, upstream.dialProxyFor, upstream.remove)
 
         if (isDirect) {
             upstreamRows.add(row)
@@ -1353,6 +1363,8 @@ class MainActivity : Activity() {
                     credit = row.credit.text.toString().toIntOrNull() ?: 0,
                     sleep = row.sleep.text.toString().toIntOrNull() ?: 0,
                     correctDelay = row.correctDelay.text.toString().toIntOrNull() ?: 0,
+                    dialProxyFor = row.dialProxyFor,
+                    remove = row.remove,
                     whitelist = rules.filter { it.listKind == LIST_WHITELIST }.map(::editableDomainList),
                     blacklist = rules.filter { it.listKind == LIST_BLACKLIST }.map(::editableDomainList)
                 )
@@ -1657,7 +1669,9 @@ class MainActivity : Activity() {
         val dnsResolve: CheckBox,
         val credit: EditText,
         val sleep: EditText,
-        val correctDelay: EditText
+        val correctDelay: EditText,
+        val dialProxyFor: String,
+        val remove: Boolean
     )
 
     private data class RuleSetRow(

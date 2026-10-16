@@ -82,12 +82,53 @@ Path = "geosite:gfw"
 socks5://a.b.c.d:1080?upProxy=http://u:p@1.2.3.4:8080
 ```
 
+`upProxy` 也可以直接填写已定义的上游 `Name`，支持前向引用和多级级联：
+
+```toml
+[[UpStreams]]
+Name="entry"
+ProxyUrl="socks5://127.0.0.1:1080"
+
+[[UpStreams]]
+Name="final"
+ProxyUrl="https://proxy.example.com:443?upProxy=entry"
+```
+
+以上连接顺序为 TcpRoute2 → entry → final → 目标地址。启动时会校验名称、重复定义和循环引用；名称不存在时配置不会启动。完整代理 URL 的旧写法继续兼容。
+
 说明：
 
-- 仅建议用于原生 `direct/socks5/http/https` 链路。
-- 其他连接类型的级联能力和限制见 [ProxyClient 文档](https://github.com/GameXG/ProxyClient)。
+- 名称区分大小写；包含空格、`&`、`+` 等特殊字符时，按 URL 查询参数规则编码。
+- 引用只复用该上游的 `ProxyUrl`，不继承它的黑白名单、`DnsResolve`、`Credit`、`Sleep` 或 `CorrectDelay`。
+- 可在 `http/https/socks5` 及兼容的 `socks4/socks4a` URL 上使用名称引用。当前 ProxyClient 不支持在直连或 Xray 扩展协议 URL 上使用名称引用，此时会明确报错；这些协议仍可以作为被引用的前置代理。
 
-### 2.2 URL 内覆盖信用分
+### 2.2 反向声明前置代理 DialProxyFor
+
+在前置线路上指定目标上游 `Name`，载入时组成代理链，不改写目标线路的 TOML：
+
+```toml
+[[UpStreams]]
+Name="sub_mysub_node1"
+ProxyUrl="socks5://127.0.0.1:1080"
+DialProxyFor="exit"
+
+[[UpStreams]]
+Name="exit"
+ProxyUrl="https://proxy.example.com:443"
+```
+
+该链路连接顺序为 TcpRoute2 → sub_mysub_node1 → exit → 目标。
+设置 `DialProxyFor` 只增加前置用途，线路仍按自己的黑白名单、信誉度和延迟参与普通请求竞速。目标线路无需引用订阅节点；取消前置节点后，目标按自己的原始 `ProxyUrl` 连接，不残留对已删除节点的引用。
+
+- `DialProxyFor` 为单个上游名字，区分大小写；允许前向引用和多级链。
+- 同一条线路的 `DialProxyFor` 与 URL `upProxy` 互斥；被 `DialProxyFor` 指向的目标也不能同时自行配置 `upProxy`。
+- 多条前置指向同一目标时，生成独立链路候选并按目标线路的策略竞速。各链路有独立缓存身份；每个目标最多 256 个候选。
+- 目标必须存在；自指、循环、冲突和不支持的协议会在载入时报错。
+- 继承的是前置的代理 URL；目标的 `DnsResolve`、`Credit`、`Sleep`、`CorrectDelay` 和黑白名单仍属于目标线路，不继承前置线路的这些策略参数。
+- 当前 ProxyClient 允许 HTTP/HTTPS/SOCKS 作为接收前置的目标协议；不能为直连或 Xray 扩展协议目标配置此项。前置本身仍可使用这些协议。
+- 原有显式 `upProxy=节点名` 继续兼容，也仍要求被引用节点存在。需自由取消订阅前置时，使用上面的反向声明方式。
+
+### 2.3 URL 内覆盖信用分
 
 可以在 URL 里写 `credit` 覆盖 `UpStreams[].Credit`：
 
